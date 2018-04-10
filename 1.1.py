@@ -11,3 +11,4 @@ def runge_kutta4(y_n, t_n, h, f):
     
     # Regn ut og returner neste verdi
     return y_n + (h/6)*(k1 + 2*k2 + 2*k3 + k4)
+hkkjj
