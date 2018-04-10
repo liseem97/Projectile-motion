@@ -1,0 +1,10 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+T = 
+R = 
+G = 6.673e-11           #Gravitational constant [N (m/kg)^2]
+M = 2.0e30              #Mass of Sun [kg]
+m = 6.0e24              #Mass of Earth [kg]
+#Finn riktige enheter!!!
+
