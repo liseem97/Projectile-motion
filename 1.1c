@@ -1,16 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-T = 1                   #Orbital period [yr] (3.2e7 [s])
-R = 1                   #Aphelion distance (radius of path) [AU] (1.5e11 [m])
-GM = 4*(np.pi**2)       # [AU^3/yr^2]
-m = 6.0e24              #Mass of Earth [kg] #Finn riktige enheter!!!
+T = 1                       #Orbital period [yr] (3.2e7 [s])
+R = 1                       #Aphelion distance (radius of path) [AU] (1.5e11 [m])
+GM = 4*(np.pi**2)           #Mass of Sun*Gravitaional constant [AU^3/yr^2]
+m = (4*(np.pi**2))/332950   #Mass of Earth [AU^3/yr^2] (6.0e24 [kg])
 
 C = -(GM)/(R**3)
 print(C)
 
 #Initial conditions
-X0 = ?
+X0 = 1
 Y0 = 0
 U0 = 0
 V0 = ?
