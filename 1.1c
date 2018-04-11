@@ -1,10 +1,102 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-T = 
-R = 
-G = 6.673e-11           #Gravitational constant [N (m/kg)^2]
-M = 2.0e30              #Mass of Sun [kg]
-m = 6.0e24              #Mass of Earth [kg]
-#Finn riktige enheter!!!
+T = 1                   #Orbital period [yr] (3.2e7 [s])
+R = 1                   #Aphelion distance (radius of path) [AU] (1.5e11 [m])
+GM = 4*(np.pi**2)       # [AU^3/yr^2]
+m = 6.0e24              #Mass of Earth [kg] #Finn riktige enheter!!!
 
+C = -(GM)/(R**3)
+print(C)
+
+#Initial conditions
+X0 = ?
+Y0 = 0
+U0 = 0
+V0 = ?
+
+t_max = 1
+dt = 0.0001
+N = int(t_max/dt)
+
+#Runge-Kutta Method, 4th order
+def F(X_, Y_, U_, V_):  #dX/dt
+  return U_
+
+def G(X_, Y_, U_, V_):  #dY/dt
+  return V_
+
+def H(X_, Y_, U_, V_):  #dU/dt
+  return C*X_
+
+def I(X_, Y_, U_, V_): dV/dt
+  return C*Y_
+
+X_RK = np.zeros(N)
+Y_RK = np.zeros(N)
+U_RK = np.zeros(N)
+V_RK = np.zeros(N)
+E_RK = np.zeros(N) #Total energy/mass
+
+X_RK[0] = X0
+Y_RK[0] = Y0
+
+for n in range(N-1):
+  k_x1 = dt * F( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+  k_y1 = dt * G( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+  k_u1 = dt * H( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+  k_v1 = dt * I( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+    
+  k_x2 = dt * F( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+  k_y2 = dt * G( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+  k_u2 = dt * H( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+  k_v2 = dt * I( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+    
+  k_x3 = dt * F( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+  k_y3 = dt * G( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+  k_u3 = dt * H( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+  k_v3 = dt * I( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+    
+  k_x4 = dt * F( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+  k_y4 = dt * G( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+  k_u4 = dt * H( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+  k_v4 = dt * I( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+    
+  X_RK[n+1] = X_RK[n] + k_x1/6 + k_x2/3 + k_x3/3 + k_x4/6
+  Y_RK[n+1] = Y_RK[n] + k_y1/6 + k_y2/3 + k_y3/3 + k_y4/6
+  U_RK[n+1] = U_RK[n] + k_u1/6 + k_u2/3 + k_u3/3 + k_u4/6
+  V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
+    
+  #Denne er ikke riktig, må fikses
+  #E_RK[n] = 0.5*(U_RK[n+1]**2+V_RK[n+1]**2)-C/np.sqrt(X_RK[n+1]**2 + Y_RK[n+1]**2)
+  E_RK[n] = ?
+    
+if (t_max == 1):
+  #Find offset
+  print("Offset in x: %0.3e - %0.7e = %0.7e" % (X_RK[0], X_RK[-1], X_RK[N-1]-X_RK[0]))
+  print("Offset in 'y': %0.3e - %0.7e = %0.7e" % (Y_4RK[0], Y_4RK[-1], Y_4RK[N-1]-Y_4RK[0]))
+  print("Total offset: %0.3e" % np.sqrt((X_4RK[0]-X_4RK[-1])**2+(Y_4RK[0]-Y_4RK[-1])**2))
+  
+  #Find perihelion seperation
+  r_perihelion = abs(min(Y_RK))
+  print("\nThe parahelion seperation is %0.3f, compared to 0.967." % r_perihelion)
+
+plt.figure()
+plt.title("4th order Runge-Kutta")
+plt.plot(X_RK, Y_RK, color = "crimson", label = "Earth orbit", [0], [0], color = "yellow", label = "Fixed sun")
+plt.xlabel(r"$x$")
+plt.ylabel(r"$y$")
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.title("Energy per unit mass")
+plt.plot(E_RK, color = "darkorange")
+plt.xlabel(r$n$)
+plt.ylabel("Energy")
+plt.grid()
+plt.show()
+  
+  
+    
+    
