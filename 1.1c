@@ -44,7 +44,7 @@ X_RK = np.zeros(N)
 Y_RK = np.zeros(N)
 U_RK = np.zeros(N)
 V_RK = np.zeros(N)
-E_RK = np.zeros(N) #Total energy/mass
+E_RK = np.zeros(N-1) #Total energy/mass
 
 X_RK[0] = X0
 Y_RK[0] = Y0
@@ -81,7 +81,36 @@ for n in range(N-1):
   Ek = 0.5*m*np.sqrt(U_RK[n]**2+V_RK[n]**2)
   Ep = -((GM)*m)/(np.sqrt(X_RK[n]**2+Y_RK[n]**2))
   E_RK[n] = Ek+Ep
+  
+  
+  
+#EULER-CROMER
+dt_EC = 0.000001
+N_EC= int(t_max/dt_EC)  
+  
+X_EC = np.zeros(N_EC)
+Y_EC = np.zeros(N_EC)
+U_EC = np.zeros(N_EC)
+V_EC = np.zeros(N_EC)
+E_EC = np.zeros(N_EC-1) #Total energy/mass
+
+X_EC[0] = X0
+Y_EC[0] = Y0
+U_EC[0] = U0
+V_EC[0] = V0
+
+for n in range(N_EC-1):
+    U_EC[n+1] = U_EC[n] + dt_EC * H(X_EC[n], Y_EC[n], U_EC[n], V_EC[n])
+    X_EC[n+1] = X_EC[n] + dt_EC * F(X_EC[n], Y_EC[n], U_EC[n+1], V_EC[n])
     
+    V_EC[n+1] = V_EC[n] + dt_EC * I(X_EC[n], Y_EC[n], U_EC[n], V_EC[n])
+    Y_EC[n+1] = Y_EC[n] + dt_EC * G(X_EC[n], Y_EC[n], U_EC[n], V_EC[n+1])
+    
+    Ek = 0.5*m*np.sqrt(U_EC[n]**2+V_EC[n]**2)   
+    Ep = -((GM)*m)/(np.sqrt(X_EC[n]**2+Y_EC[n]**2))
+    E_EC[n] = Ek+Ep
+    
+print(U_EC,X_EC)    
 #Ikke fjern dette, blir relevant senere
 if (t_max == 1):
   #Find offset
@@ -104,11 +133,27 @@ plt.ylabel(r"$y$ [AU]")
 plt.grid()
 plt.show()
 
-E_RK_fixed = np.delete(E_RK, -1)
+plt.figure()
+plt.title("Energy per unit mass, RK")
+plt.plot(E_RK, color = "darkorange")
+plt.xlabel(r"$n$")
+plt.ylabel("Energy")
+plt.grid()
+plt.show()
 
 plt.figure()
-plt.title("Energy per unit mass")
-plt.plot(E_RK_fixed, color = "darkorange")
+plt.title("Euler-Cromer")
+plt.plot(X_EC, Y_EC, color = "crimson", label = "Earth orbit")
+plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
+plt.legend(loc = 4)
+plt.xlabel(r"$x$ [AU]")
+plt.ylabel(r"$y$ [AU]")
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.title("Energy per unit mass, EC")
+plt.plot(E_EC, color = "darkorange")
 plt.xlabel(r"$n$")
 plt.ylabel("Energy")
 plt.grid()
