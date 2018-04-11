@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Apr 11 12:03:41 2018
-
-@author: elveb
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -14,7 +7,6 @@ GM = 4*(np.pi**2)           #Mass of Sun*Gravitaional constant [AU^3/yr^2]
 m = (4*(np.pi**2))/332950   #Mass of Earth [AU^3/yr^2] (6.0e24 [kg])
 
 C = -(GM)/(R**3)
-print("C:", C)
 
 #Initial conditions
 X0 = 1
@@ -23,11 +15,10 @@ U0 = 0
 V0 = 2*np.pi
 
 t_max = 1
-#dt = 0.1
-dt = 0.0001
+dt = 0.0001             #time step / tau
 N = int(t_max/dt)
 
-#Runge-Kutta Method, 4th order
+#RUNGE-KUTTA (4th order)
 def F(X_, Y_, U_, V_):  #dX/dt
   return U_
 
@@ -44,7 +35,9 @@ X_RK = np.zeros(N)
 Y_RK = np.zeros(N)
 U_RK = np.zeros(N)
 V_RK = np.zeros(N)
-E_RK = np.zeros(N-1) #Total energy/mass
+E_RK = np.zeros(N-1)    #Total energy/mass
+Ek_RK = np.zeros(N-1)   #Kinetic energy
+Ep_RK = np.zeros(N-1)   #Potential energy
 
 X_RK[0] = X0
 Y_RK[0] = Y0
@@ -76,23 +69,22 @@ for n in range(N-1):
   Y_RK[n+1] = Y_RK[n] + k_y1/6 + k_y2/3 + k_y3/3 + k_y4/6
   U_RK[n+1] = U_RK[n] + k_u1/6 + k_u2/3 + k_u3/3 + k_u4/6
   V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
-    
-  #E_RK[n] = 0.5*(U_RK[n+1]**2+V_RK[n+1]**2)-C/np.sqrt(X_RK[n+1]**2 + Y_RK[n+1]**2)
-  Ek = 0.5*m*np.sqrt(U_RK[n]**2+V_RK[n]**2)
-  Ep = -((GM)*m)/(np.sqrt(X_RK[n]**2+Y_RK[n]**2))
-  E_RK[n] = Ek+Ep
-  
-  
+
+  Ek_RK[n] = 0.5 * m * np.sqrt(U_RK[n]**2 + V_RK[n]**2)
+  Ep_RK[n] = -((GM) * m) / (np.sqrt(X_RK[n]**2 + Y_RK[n]**2))
+  E_RK[n] = Ek_RK[n] + Ep_RK[n]
   
 #EULER-CROMER
-dt_EC = 0.000001
+dt_EC = 0.000001                #Time step / tau
 N_EC= int(t_max/dt_EC)  
   
 X_EC = np.zeros(N_EC)
 Y_EC = np.zeros(N_EC)
 U_EC = np.zeros(N_EC)
 V_EC = np.zeros(N_EC)
-E_EC = np.zeros(N_EC-1) #Total energy/mass
+E_EC = np.zeros(N_EC-1)         #Total energy/mass
+Ek_EC = np.zeros(N_EC-1)
+Ep_EC = np.zeros(N_EC-1)
 
 X_EC[0] = X0
 Y_EC[0] = Y0
@@ -106,23 +98,15 @@ for n in range(N_EC-1):
     V_EC[n+1] = V_EC[n] + dt_EC * I(X_EC[n], Y_EC[n], U_EC[n], V_EC[n])
     Y_EC[n+1] = Y_EC[n] + dt_EC * G(X_EC[n], Y_EC[n], U_EC[n], V_EC[n+1])
     
-    Ek = 0.5*m*np.sqrt(U_EC[n]**2+V_EC[n]**2)   
-    Ep = -((GM)*m)/(np.sqrt(X_EC[n]**2+Y_EC[n]**2))
-    E_EC[n] = Ek+Ep
+    Ek_EC[n] = 0.5 * m * np.sqrt(U_EC[n]**2 + V_EC[n]**2)   
+    Ep_EC[n] = -((GM) * m) / (np.sqrt(X_EC[n]**2 + Y_EC[n]**2))
+    E_EC[n] = Ek_EC[n] + Ep_EC[n]
     
-print(U_EC,X_EC)    
-#Ikke fjern dette, blir relevant senere
-if (t_max == 1):
-  #Find offset
-  print()
-  print("Offset in x: %0.3e - %0.7e = %0.7e" % (X_RK[0], X_RK[-1], X_RK[N-1]-X_RK[0]))
-  print("Offset in y: %0.3e - %0.7e = %0.7e" % (Y_RK[0], Y_RK[-1], Y_RK[N-1]-Y_RK[0]))
-  print("Total offset: %0.3e" % np.sqrt((X_RK[0]-X_RK[-1])**2+(Y_RK[0]-Y_RK[-1])**2))
-  
-  #Find perihelion seperation
-  r_perihelion = abs(min(Y_RK))
-  print("\nThe parahelion seperation is %0.3f, compared to 0.967." % r_perihelion)
+#print(U_EC,X_EC)
 
+#Plots_______________________________________________
+
+#RK
 plt.figure()
 plt.title("4th order Runge-Kutta")
 plt.plot(X_RK, Y_RK, color = "crimson", label = "Earth orbit")
@@ -134,13 +118,35 @@ plt.grid()
 plt.show()
 
 plt.figure()
-plt.title("Energy per unit mass, RK")
-plt.plot(E_RK, color = "darkorange")
-plt.xlabel(r"$n$")
-plt.ylabel("Energy")
+plt.title("Velocity along x- and y-axis, RK")
+plt.plot(U_RK, color = "magenta", label = "Velocity along x-axis")
+plt.plot(V_RK, color = "darkblue", label = "Velocity along y-axis")
+plt.legend()
+plt.xlabel(r"$u$ [AU/yr]")
+plt.ylabel(r"$v$ [AU/yr]")
 plt.grid()
 plt.show()
 
+plt.figure()
+plt.title("Total energy per unit mass, RK")
+plt.plot(E_RK, color = "crimson", label = "Total energy")
+plt.xlabel(r"$n$ [?]")
+plt.ylabel("Energy [?]")
+plt.legend()
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.title("Kinetic and potential energy per unit mass, RK")
+plt.plot(Ek_RK, color = "red", label = "Kinetic energy")
+plt.plot(abs(Ep_RK), color = "darkorange", label = "Potential energy")
+plt.xlabel(r"$n$ [?]")
+plt.ylabel("Energy [?]")
+plt.legend()
+plt.grid()
+plt.show()
+
+#EC
 plt.figure()
 plt.title("Euler-Cromer")
 plt.plot(X_EC, Y_EC, color = "crimson", label = "Earth orbit")
@@ -152,9 +158,30 @@ plt.grid()
 plt.show()
 
 plt.figure()
-plt.title("Energy per unit mass, EC")
-plt.plot(E_EC, color = "darkorange")
-plt.xlabel(r"$n$")
-plt.ylabel("Energy")
+plt.title("Velocity along x- and y-axis, EC")
+plt.plot(U_EC, color = "magenta", label = "Velocity along x-axis")
+plt.plot(V_EC, color = "darkblue", label = "Velocity along y-axis")
+plt.legend()
+plt.xlabel(r"$u$ [AU/yr]")
+plt.ylabel(r"$v$ [AU/yr]")
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.title("Total energy per unit mass, EC")
+plt.plot(E_EC, color = "crimson", label = "Total energy")
+plt.xlabel(r"$n$ [?]")
+plt.ylabel("Energy [?]")
+plt.legend()
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.title("Kinetic and potential energy per unit mass, EC")
+plt.plot(Ek_EC, color = "red", label = "Kinetic energy")
+plt.plot(abs(Ep_EC), color = "darkorange", label = "Potential energy")
+plt.xlabel(r"$n$ [?]")
+plt.ylabel("Energy [?]")
+plt.legend()
 plt.grid()
 plt.show()
