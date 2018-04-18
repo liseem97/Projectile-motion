@@ -1,0 +1,142 @@
+'''
+regn ut precession change (theta) i grader/arcsec
+plot som funksjon av alpha
+
+43 arcseconds = 0.0119444444 degrees
+
+klarer ikke beregne Y korrekt tror jeg
+'''
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+T = 0.2408                  #Orbital period [yr] (3.2e7 [s])
+R = 0.47                    #Aphelion distance (radius of path) [AU] (1.5e11 [m])
+GM = 4*(np.pi**2)           #Mass of Sun*Gravitaional constant [AU^3/yr^2]
+m = (4*(np.pi**2))/332950   #Mass of Earth [AU^3/yr^2] (6.0e24 [kg])
+mM = 0.056*m                #Mass of Mercury
+#a = 0.004                  #Alpha - try different values [AU^2] a = 0.004
+
+
+    
+C = -(GM)
+
+#Initial conditions
+X0 = R
+Y0 = 0
+U0 = 0
+V0 = 8.2
+
+t_max = 0.2408
+#dt = 0.1
+dt = 0.001
+N = int(t_max/dt)#*5
+
+#Runge-Kutta Method, 4th order
+def F(X_, Y_, U_, V_):  #dX/dt
+  return U_
+
+def G(X_, Y_, U_, V_):  #dY/dt
+  return V_
+
+def H(X_, Y_, U_, V_, A_):  #dU/dt
+    return C * ((X_**2+Y_**2)**(-3/2)) * (1+(A_/(X_**2+Y_**2))) * X_    #With precession
+    #return C * ((X_**2+Y_**2)**(-3/2)) * X_                           #Without precession
+
+def I(X_, Y_, U_, V_, A_): #dV/dt
+    return C * ((X_**2+Y_**2)**(-3/2)) * (1+(A_/(X_**2+Y_**2))) * Y_    #With precession
+    #return C * ((X_**2+Y_**2)**(-3/2))*Y_                             ##Without precession
+
+
+X = np.zeros(N)
+Y = np.zeros(N)
+U = np.zeros(N)
+V = np.zeros(N)
+E = np.zeros(N-1) #Total energy/mass
+alpha = np.linspace(1.0*10**(-8), 1E-5, N)
+#alpha = np.arange(1.0*10**(-8), 1, 1/(N-1))
+#print("alpha = ",alpha)
+theta = np.zeros(len(alpha))
+alpha[0] = 0
+theta[0] = 0
+
+X[0] = X0
+Y[0] = Y0
+U[0] = U0
+V[0] = V0
+
+for i in range(N-1):
+    
+    for n in range(N-1):
+        
+        k_x1 = dt * F( X[n], Y[n], U[n], V[n] )
+        k_y1 = dt * G( X[n], Y[n], U[n], V[n] )
+        k_u1 = dt * H( X[n], Y[n], U[n], V[n], alpha[i] )
+        k_v1 = dt * I( X[n], Y[n], U[n], V[n], alpha[i] )
+            
+        k_x2 = dt * F( X[n] + k_x1/2, Y[n] + k_y1/2, U[n] + k_u1/2, V[n] + k_v1/2 )
+        k_y2 = dt * G( X[n] + k_x1/2, Y[n] + k_y1/2, U[n] + k_u1/2, V[n] + k_v1/2 )
+        k_u2 = dt * H( X[n] + k_x1/2, Y[n] + k_y1/2, U[n] + k_u1/2, V[n] + k_v1/2, alpha[i] )
+        k_v2 = dt * I( X[n] + k_x1/2, Y[n] + k_y1/2, U[n] + k_u1/2, V[n] + k_v1/2, alpha[i] )
+            
+        k_x3 = dt * F( X[n] + k_x2/2, Y[n] + k_y2/2, U[n] + k_u2/2, V[n] + k_v2/2 )
+        k_y3 = dt * G( X[n] + k_x2/2, Y[n] + k_y2/2, U[n] + k_u2/2, V[n] + k_v2/2 )
+        k_u3 = dt * H( X[n] + k_x2/2, Y[n] + k_y2/2, U[n] + k_u2/2, V[n] + k_v2/2, alpha[i] )
+        k_v3 = dt * I( X[n] + k_x2/2, Y[n] + k_y2/2, U[n] + k_u2/2, V[n] + k_v2/2, alpha[i] )
+        
+        k_x4 = dt * F( X[n] + k_x3, Y[n] + k_y3, U[n] + k_u3, V[n] + k_v3 )
+        k_y4 = dt * G( X[n] + k_x3, Y[n] + k_y3, U[n] + k_u3, V[n] + k_v3 )
+        k_u4 = dt * H( X[n] + k_x3, Y[n] + k_y3, U[n] + k_u3, V[n] + k_v3, alpha[i] )
+        k_v4 = dt * I( X[n] + k_x3, Y[n] + k_y3, U[n] + k_u3, V[n] + k_v3, alpha[i] )
+        
+        X[n+1] = X[n] + k_x1/6 + k_x2/3 + k_x3/3 + k_x4/6
+        Y[n+1] = Y[n] + k_y1/6 + k_y2/3 + k_y3/3 + k_y4/6           #HER SKJER DET NOE RART
+        U[n+1] = U[n] + k_u1/6 + k_u2/3 + k_u3/3 + k_u4/6
+        V[n+1] = V[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
+                
+        #E[n] = 0.5*(U[n+1]**2+V[n+1]**2)-C/np.sqrt(X[n+1]**2 + Y[n+1]**2)
+        Ek = 0.5*mM*np.sqrt(U[n]**2+V[n]**2)
+        Ep = -((GM)*mM)/(np.sqrt(X[n]**2+Y[n]**2))
+        E[n] = Ek+Ep
+    #print("alpha",i, " = ",alpha[i])
+    theta[i+1] = np.arctan((abs(Y[0]-(Y[-1]))/R)) #theta: precession change (grader?)     #HER SKJER DET NOE RART
+    print("Y[-1] ",i," = ",Y[-1]) #siste punkt i banen
+    print("dy ", i, "= ", abs(Y[0]-(Y[-1]))) #avstand fra startpunkt til sluttpunkt. skal være så liten at X[-1] ca lik X[0]
+    print("dy /R", i, "= ", abs(Y[0]-(Y[-1]))/R) 
+    print("theta = ", theta[n])
+    print()
+    #print("Y[0]",n, " = " ,Y[0])
+    #print("Y[-1]", n, " = ", Y[-1])
+  
+#print("Y = ",Y)
+#if (t_max == T): 
+  #Find offset
+  #print()
+  #print("Offset in x: %0.3e - %0.7e = %0.7e" % (X[0], X[-1], X[N-1]-X[0]))
+  #print("Offset in y: %0.3e - %0.7e = %0.7e" % (Y[0], Y[-1], Y[N-1]-Y[0]))
+  #print("Total offset: %0.3e" % np.sqrt((X[0]-X[-1])**2+(Y[0]-Y[-1])**2))
+  
+  #Find perihelion seperation
+  #r_perihelion = abs(min(Y))
+  #print(Y)
+  #print("\nThe parahelion seperation is %0.3f, compared to 0.967." % r_perihelion)
+  
+'''  
+plt.figure()
+plt.title("4th order Runge-Kutta")
+plt.plot(X, Y, color = "crimson", label = "Earth orbit")
+plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
+plt.legend(loc = 4)
+plt.xlabel(r"$x$ [AU]")
+plt.ylabel(r"$y$ [AU]")
+plt.grid()
+plt.show()
+'''
+
+plt.figure()
+plt.title("Perihelion shift as function of aplha")
+plt.plot(alpha, theta)
+plt.xlabel(r"$\alpha$")
+plt.ylabel(r"$\theta$")
+plt.grid()
+plt.show()
