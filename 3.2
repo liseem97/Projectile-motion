@@ -33,7 +33,8 @@ T_GEO = 2*3.14*GEO/V2                    #Orbital period [yr] (3.2e7 [s])
 
 t_max = T_LEO
 dt = 0.5          #time step / tau
-orbits=25
+orbits=40
+#orbits=10
 N = int(t_max/dt)*orbits
 #t=np.linspace(0,t_max,N)
 
@@ -68,11 +69,16 @@ Ep[0] = C * mS / (np.sqrt(X[0]**2 + Y[0]**2))
 E[0]=Ek[0]+Ep[0]
 t[0]=0
 
-"""
+deltaV=0
+
+""" 
+----------------------------
+#Hohmann transfer best
 i=1
 inc=1.2
 switch1 = True
 switch2 = True
+
 
 for n in range(N-1):
   t[n+1]=t[n]+dt
@@ -123,13 +129,21 @@ for n in range(N-1):
        t2=t[n+1]
        V[n+1]=V[n+1]-deltaV2
        print("V2", V[n+1], deltaV2)
+deltaV=deltaV1+deltaV2
+--------------------
+#Other maneuver
 """
-i = 1
+i = 0
 m=5
-deltaR=1.7*(GEO-LEO)/m
-t_next=t_max*50
-print(deltaR)
+deltaR=(GEO-LEO)/m
+
+print("Location of transfer orbits: ")
+for j in range (m+1):
+    print(LEO+deltaR*j)
+print("Between: ", LEO, " and ", GEO)
+
 timer=0
+t_next = np.pi*LEO/(2*V0)
 switch=False
 for n in range(N-1):
     t[n+1]=t[n]+dt
@@ -162,9 +176,9 @@ for n in range(N-1):
     timer+=dt
     #print(timer)
     
-    #Ek[n+1] = 0.5 * mS * (U[n+1]**2 + V[n+1]**2)
-    #Ep[n+1] = C*mS / (np.sqrt(X[n+1]**2 + Y[n+1]**2))
-    #E[n+1] = Ek[n+1] + Ep[n+1]
+    Ek[n+1] = 0.5 * mS * (U[n+1]**2 + V[n+1]**2)
+    Ep[n+1] = C*mS / (np.sqrt(X[n+1]**2 + Y[n+1]**2))
+    E[n+1] = Ek[n+1] + Ep[n+1]
   
     
     if(timer>=t_next and switch==True):
@@ -178,21 +192,27 @@ for n in range(N-1):
         
         #deltaV1=abs(V1_t-V1)
         #deltaV2=abs(V2-V2_t)
+        
+        print("delta v2", i, N-1-n)
         print("Predicted speed: ",V2_t, " Actual speed: ",V_test, "Difference: ",V2_t-V_test)
         print("Predicted time: ",t_next, " Actual time: ",timer, "Difference: ",t_next-timer)
-        print("Predicted distance: ",R2, " Actual distance: ",R_test, "Difference: ",R2-R_test)
+        print("Predicted distance: ",R2, " Actual distance: ",R_test, "Difference: ",R2-R_test,"\n")
 
         switch=False
         #print("ny R: ",V[n+1],a,U[n+1])
+        deltaV+=deltaV2
         V[n+1]=V[n+1]*(1+deltaV2/V2)
         U[n+1]=U[n+1]*(1+deltaV2/V2)
+        V_new=np.sqrt(U[n+1]**2+V[n+1]**2)
+        
+        t_next = np.pi*R2/(4*V_new)
+        timer=0
         #print("V1", V[n+1], deltaV1)
-        print("deltav2", i,V[n+1], U[n+1], N-1-n)
         #i=10
         
-    if (n==(i*int((N-1)/m)) and switch==False):
+    if (timer>=t_next and switch==False and i<m):
         R1=np.sqrt(X[n+1]**2+Y[n+1]**2)
-        R2=R1+deltaR
+        R2=LEO+(i+1)*deltaR
         Rt=(R1+R2)/2
 
         V1=np.sqrt(U[n+1]**2+V[n+1]**2)
@@ -200,23 +220,29 @@ for n in range(N-1):
         V1_t=np.sqrt(-C*(2/R1-1/(Rt)))
         V2_t=np.sqrt(-C*(2/R2-1/(Rt)))
         
+        V_pred=np.sqrt(-C/(LEO+i*deltaR))
+        
         deltaV1=abs(V1_t-V1)
         deltaV2=abs(V2-V2_t)
+        
+        print("delta v1", i, N-1-n)
+        print("Predicted speed: ", V_pred, " Actual speed: ",V1, "Difference: ",V_pred-V1)
+        print("Predicted time: ",t_next, " Actual time: ",timer, "Difference: ",t_next-timer)
+        print("Predicted distance: ",LEO+i*deltaR, " Actual distance: ",R1, "Difference: ",R1-(LEO+i*deltaR))
         
         t_next = np.sqrt(np.pi**2*Rt**3/-C)
         print(t_next, timer)
         timer=0
         
+        deltaV+=deltaV1
         V[n+1]=V[n+1]*(1+deltaV1/V1)
         U[n+1]=U[n+1]*(1+deltaV1/V1)
-        print(V1, np.sqrt(U[n+1]**2+V[n+1]**2), deltaV1)
-        #print("V1", V[n+1], deltaV1)
-        print("deltav1", i,V[n+1], U[n+1], N-1-n)
+        
         switch=True
         i+=1
         
-        
-
+       
+print("Total velocity change: ", deltaV)
 
 #delta_t=t2-t1
 #print("Net velocity increase: ", deltaV1+deltaV2, " Time between velocity changes: ", delta_t)
@@ -237,12 +263,14 @@ for i in range (len(xlist)-1):
 
 #RK
 plt.figure()
-plt.title("4th order Runge-Kutta")
+plt.title("Satellite movement")
 plt.plot(X/1000, Y/1000, color = "crimson", label = "Satellite orbit")
-plt.plot(xlist/1000,geolist1/1000,color="darkblue", label="GEO orbit")
-plt.plot(xlist/1000,geolist2/1000,color="darkblue")
+plt.plot(xlist/1000,geolist1/1000,color="maroon", label="GEO orbit")
+plt.plot(xlist/1000,geolist2/1000,color="maroon")
 plt.plot(xlist/1000,leolist1/1000,color="orange", label="LEO orbit")
 plt.plot(xlist/1000,leolist2/1000,color="orange")
+plt.plot([0], [0], color = "darkblue", marker = "o", markersize = 19, label="Earth")
+
 plt.axis("equal")
 #plt.plot([0], [0], color = "darkblue", marker = "o", markersize = 200)
 plt.legend(loc = 4)
@@ -252,18 +280,18 @@ plt.grid()
 plt.show()
 
 plt.figure()
-plt.title("Velocity along x- and y-axis, RK")
-plt.plot(t,U, color = "magenta", label = "Velocity along x-axis")
-plt.plot(t,V, color = "darkblue", label = "Velocity along y-axis")
-plt.plot(t,np.sqrt(V**2+U**2), color = "green", label = "Velocity along y-axis")
+plt.title("Velocity of satellite as function of time")
+#plt.plot(t,U, color = "magenta", label = "Velocity along x-axis")
+#plt.plot(t,V, color = "darkblue", label = "Velocity along y-axis")
+plt.plot(t,np.sqrt(V**2+U**2), color = "green", label = "Absolute velocity")
 plt.legend()
 plt.xlabel("Time / s")
-plt.ylabel(r"$v$ / ms^(-1)")
+plt.ylabel("Velocity / m*s^(-1)")
 plt.grid()
 plt.show()
 
 plt.figure()
-plt.title("Kinetic and potential energy per unit mass, RK")
+plt.title("Energy of satellite as function of time")
 plt.plot(t,Ek, color = "red", label = "Kinetic energy")
 plt.plot(t,Ep, color = "darkorange", label = "Potential energy")
 plt.plot(t,E, color = "crimson", label = "Total energy")
