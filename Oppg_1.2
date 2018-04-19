@@ -1,0 +1,139 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Apr 12 10:44:20 2018
+
+@author: elveb
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+T = 1                       #Orbital period [yr] (3.2e7 [s])
+R = 1                       #Aphelion distance (radius of path) [AU] (1.5e11 [m])
+GMs = 4*(np.pi**2)          #Mass of Sun*Gravitaional constant [AU^3/yr^2]
+Me = (4*(np.pi**2))/332950  #Mass of Earth [AU^3/yr^2] (6.0e24 [kg])
+
+#Initial conditions
+X0 = 1
+Y0 = 0
+U0 = 0
+V0 = 2*np.pi
+
+t_min = 0
+t_max = 1
+
+def F(X_, Y_, U_, V_):  #dX/dt
+  return U_
+
+def G(X_, Y_, U_, V_):  #dY/dt
+  return V_
+
+def H(X_, Y_, U_, V_):  #dU/dt
+  return (-(GMs)/((np.sqrt(X_**2+Y_**2))**3))*X_
+
+def I(X_, Y_, U_, V_): #dV/dt
+    return (-(GMs)/((np.sqrt(X_**2+Y_**2))**3))*Y_
+
+tau = np.linspace(0.001, 0.01, 10)
+print(tau)
+N_list = np.zeros(len(tau))
+E_diff_RK = np.zeros(len(tau))      #Energy difference for one orbit
+E_diff_EC = np.zeros(len(tau))      #Energy difference for one orbit
+
+#_____________________________________________________________________
+
+for m in range(len(tau)):
+    dt_RK = tau[m]
+    dt_EC = tau[m]
+    
+    N = int(t_max / tau[m])
+    N_list[m] = N
+
+    #RK
+    X_RK = np.zeros(N)
+    Y_RK = np.zeros(N)
+    U_RK = np.zeros(N)
+    V_RK = np.zeros(N)
+    E_RK = np.zeros(N)           #Total energy/mass
+    Ek_RK = np.zeros(N)          #Kinetic energy
+    Ep_RK = np.zeros(N)          #Potential energy
+    
+    X_RK[0] = X0
+    Y_RK[0] = Y0
+    U_RK[0] = U0
+    V_RK[0] = V0
+    Ek_RK[0] = 0.5 * Me * (U_RK[0]**2 + V_RK[0]**2)
+    Ep_RK[0] = -((GMs) * Me) / np.sqrt(X_RK[0]**2 + Y_RK[0]**2)
+    E_RK[0] = Ek_RK[0] + Ep_RK[0]
+    
+    #EC
+    X_EC = np.zeros(N)
+    Y_EC = np.zeros(N)
+    U_EC = np.zeros(N)
+    V_EC = np.zeros(N)
+    E_EC = np.zeros(N)              #Total energy
+    Ek_EC = np.zeros(N)             #Kinetic energy
+    Ep_EC = np.zeros(N)             #Potential energy   
+    
+    X_EC[0] = X0
+    Y_EC[0] = Y0
+    U_EC[0] = U0
+    V_EC[0] = V0
+    Ek_EC[0] = 0.5 * Me * (U_EC[0]**2 + V_EC[0]**2)
+    Ep_EC[0] = -((GMs)*Me) / np.sqrt(X_EC[0]**2 + Y_EC[0]**2)
+    E_EC[0] = Ek_EC[0] + Ep_EC[0]
+    
+    for n in range(N-1):
+        k_x1 = dt_RK * F( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+        k_y1 = dt_RK * G( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+        k_u1 = dt_RK * H( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+        k_v1 = dt_RK * I( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+        
+        k_x2 = dt_RK * F( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+        k_y2 = dt_RK * G( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+        k_u2 = dt_RK * H( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+        k_v2 = dt_RK * I( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+        
+        k_x3 = dt_RK * F( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+        k_y3 = dt_RK * G( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+        k_u3 = dt_RK * H( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+        k_v3 = dt_RK * I( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+        
+        k_x4 = dt_RK * F( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+        k_y4 = dt_RK * G( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+        k_u4 = dt_RK * H( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+        k_v4 = dt_RK * I( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+        
+        X_RK[n+1] = X_RK[n] + k_x1/6 + k_x2/3 + k_x3/3 + k_x4/6
+        Y_RK[n+1] = Y_RK[n] + k_y1/6 + k_y2/3 + k_y3/3 + k_y4/6
+        U_RK[n+1] = U_RK[n] + k_u1/6 + k_u2/3 + k_u3/3 + k_u4/6
+        V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
+    
+        Ek_RK[n+1] = 0.5 * Me * np.sqrt(U_RK[n+1]**2 + V_RK[n+1]**2)**2
+        Ep_RK[n+1] = -((GMs) * Me) / (np.sqrt(X_RK[n+1]**2 + Y_RK[n+1]**2))
+        E_RK[n+1] = Ek_RK[n+1] + Ep_RK[n+1]
+        
+        U_EC[n+1] = U_EC[n] + (dt_EC * ((-GMs)*X_EC[n]) * (X_EC[n]**2 + Y_EC[n]**2)**(-3/2))
+        X_EC[n+1] = X_EC[n] + dt_EC * U_EC[n+1]
+        V_EC[n+1] = V_EC[n] + (dt_EC * ((-GMs)*Y_EC[n]) * (X_EC[n]**2 + Y_EC[n]**2)**(-3/2))
+        Y_EC[n+1] = Y_EC[n] + dt_EC * V_EC[n+1]
+    
+        Ek_EC[n+1] = 0.5 * Me * (U_EC[n+1]**2 + V_EC[n+1]**2)
+        Ep_EC[n+1] = -(GMs*Me) / np.sqrt(X_EC[n+1]**2 + Y_EC[n+1]**2)
+        E_EC[n+1] = Ek_EC[n+1] + Ep_EC[n+1]
+      
+    E_diff_RK[m] = E_RK[-1] - E_RK[0] 
+    E_diff_EC[m] = E_EC[-1] - E_EC[0]
+    
+#Plots____________________________________________
+plt.figure()
+#plt.plot(tau, abs(E_diff_RK), color="darkblue", label = "RK")
+#plt.plot(tau, abs(E_diff_EC), color="teal", label = "EC")
+plt.plot(N_list, abs(E_diff_RK), color = "darkblue", label = "RK")
+plt.plot(N_list, abs(E_diff_EC), color = "teal", label = "EC")
+plt.title("Energydifference for one orbit as function of tau")
+plt.xlabel("$n$")
+plt.ylabel(r"$E$ [AU$^4$ / yr$^5$]")
+plt.legend()
+plt.grid()
+plt.show()
