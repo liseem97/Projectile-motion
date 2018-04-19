@@ -10,14 +10,15 @@ Hold farten konstant. Varier radiusen og se at perioden endrer seg.
 
 import numpy as np
 import matplotlib.pyplot as plt
-"""
-T = 1                       #Orbital period [yr] (3.2e7 [s])
-R = 1                       #Aphelion distance (radius of path) [AU] (1.5e11 [m])
-GMs = 4*(np.pi**2)           #Mass of Sun*Gravitaional constant [AU^3/yr^2]
-Me = (4*(np.pi**2))/332950   #Mass of Earth [AU^3/yr^2] (6.0e24 [kg])
 
+T = 1                           #Orbital period [yr] (3.2e7 [s])
+R = 1                           #Aphelion distance (radius of path) [AU] (1.5e11 [m])
+GMs = 4*(np.pi**2)              #Mass of Sun*Gravitaional constant [AU^3/yr^2]
+Me = (4*(np.pi**2))/332950      #Mass of Earth [AU^3/yr^2] (6.0e24 [kg])
+"""
 radius = np.linspace(0.5, 35, 100)
 period = np.zeros(len(radius))
+count = 0
 
 def F(X_, Y_, U_, V_):  #dX/dt
     return U_
@@ -28,7 +29,7 @@ def G(X_, Y_, U_, V_):  #dY/dt
 def H(X_, Y_, U_, V_):  #dU/dt
     return (-(GMs)/((np.sqrt(X_**2+Y_**2)**3)))*X_
 
-def I(X_, Y_, U_, V_): #dV/dt
+def I(X_, Y_, U_, V_):  #dV/dt
     return (-(GMs)/((np.sqrt(X_**2+Y_**2)**3)))*Y_
 
 for r in radius:
@@ -37,8 +38,11 @@ for r in radius:
     U0 = 0
     V0 = 2*np.pi
 
+    tol = 0.0005 #[AU]
+    count = 0
+
     t_min = 0
-    t_max = 1
+    t_max = 200
     dt_RK = 0.0001                   #time step / tau #RK=0.0001
     N_RK = int(t_max/dt_RK)
     t_RK = np.linspace(t_min, t_max, N_RK)
@@ -78,19 +82,27 @@ for r in radius:
         Y_RK[n+1] = Y_RK[n] + k_y1/6 + k_y2/3 + k_y3/3 + k_y4/6
         U_RK[n+1] = U_RK[n] + k_u1/6 + k_u2/3 + k_u3/3 + k_u4/6
         V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
-  """  
+        
+        #if (Y_RK[n+1] < tol and X_RK[n+1] < r+tol):
+        #    period[count] = 
+        #    count+=1
+        #    break
+"""
 #Plots___________________________________________________________________________________
 
 plt.figure()
+fig = plt.figure(figsize=(14, 5))
 plt.title("Kepler's third law for planets with nearly circular orbits")
-plt.plot(radius, period, color = "black")
-plt.loglog([0.7233], [0.6152], label = "Venus", marker="o", markersize = 19, color = "orange")
-plt.loglog([1], [1], label = "Earth", marker="o", markersize = 19, color = "teal")
-plt.loglog([1.5237], [1.8809], label = "Mars", marker="o", markersize = 19, color = "crimson")
-plt.loglog([5.2028], [11.862], label = "Jupiter", marker="o", markersize = 19, color = "brown")
-plt.loglog([9.5388], [29.456], label = "Saturn", marker="o", markersize = 19, color = "sienna")
-plt.loglog([19.191], [84.07], label = "Uranus", marker="o", markersize = 19, color = "cyan")
-plt.loglog([30.061], [164.81], label = "Neptun", marker="o", markersize = 19, color = "blue")
-plt.legend()
+#plt.plot(radius**3, period**2, color = "black")
+plt.loglog([0.7233], [0.6152], label = "Venus", marker="o", markersize = 15, color = "orange")
+plt.loglog([1], [1], label = "Earth", marker="o", markersize = 15, color = "teal")
+plt.loglog([1.5237], [1.8809], label = "Mars", marker="o", markersize = 15, color = "maroon")
+plt.loglog([5.2028], [11.862], label = "Jupiter", marker="o", markersize = 15, color = "sienna")
+plt.loglog([9.5388], [29.456], label = "Saturn", marker="o", markersize = 15, color = "tan")
+plt.loglog([19.191], [84.07], label = "Uranus", marker="o", markersize = 15, color = "cyan")
+plt.loglog([30.061], [164.81], label = "Neptun", marker="o", markersize = 15, color = "blue")
+plt.legend(loc = 4)
+plt.xlabel(r"Square of orbital period [yr$^2$]")
+plt.ylabel(r"Cube of the semimajor axis [AU$^3$]")
 plt.grid()
 plt.show()
