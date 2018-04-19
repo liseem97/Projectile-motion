@@ -14,7 +14,7 @@ GM = 4*(np.pi**2)           #Mass of Sun*Gravitaional constant [AU^3/yr^2]
 m_E1 = (4*(np.pi**2))/332950   #Mass of Earth [AU^3/yr^2] (6.0e24 [kg])
 #m_E = (4*(np.pi**2))/332950 #mass of Earth
 #m_E = 317.89*m_E1 #mass of Jupiter
-m_E = 317.89*m_E1*5
+m_E = 317.89*m_E1*5 #funny mass
 alpha_E1 = 1/332950
 #alpha_E = 1/332950 alpha Earth
 #alpha_E = 317.89*alpha_E1 #alpha of jupiter
@@ -150,7 +150,7 @@ for n in range(N-1):
 
 #RK
 plt.figure()
-plt.title("Position of Earth and Mars with RK-algorithm")
+plt.title("Position of Earth and Mars")
 plt.plot(X_E, Y_E, color = "olive", label = "Earth orbit")
 plt.plot(X_M, Y_M, color = "maroon", label = "Mars orbit")
 plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
@@ -163,7 +163,7 @@ plt.grid()
 plt.show()
 
 velo = np.sqrt(U_E**2+V_E**2)
-plt.title("Velocity of Earth as function of time, RK", y=1.05)
+plt.title("Velocity of Earth as function of time", y=1.05)
 plt.plot(t, velo, color = "olive", label = "Absolute velocity")
 plt.plot(t, U_E, color = "teal", label = "Velocity along y-axis")
 plt.plot(t, V_E, color = "darkblue", label = "Velocity along y-axis")
@@ -174,7 +174,7 @@ plt.grid()
 #plt.savefig("/Users/elveb/Documents/RK_2.pdf")
 plt.show()
 
-plt.title("Energy of Earth as function of time, RK")
+plt.title("Energy of Earth as function of time")
 plt.plot(t, E_E, color = "olive", label = "Total energy")
 plt.plot(t, Ek_E, color = "teal", label = "Kinetic energy")
 plt.plot(t, Ep_E, color = "darkblue", label = "Potential energy")
@@ -187,7 +187,7 @@ plt.show()
 
 
 velo = np.sqrt(U_E**2+V_E**2)
-plt.title("Velocity of Mars as function of time, RK", y=1.05)
+plt.title("Velocity of Mars as function of time", y=1.05)
 plt.plot(t, velo, color = "olive", label = "Absolute velocity")
 plt.plot(t, U_M, color = "teal", label = "Velocity along y-axis")
 plt.plot(t, V_M, color = "darkblue", label = "Velocity along y-axis")
@@ -198,7 +198,7 @@ plt.grid()
 #plt.savefig("/Users/elveb/Documents/RK_2.pdf")
 plt.show()
 
-plt.title("Energy of Mars as function of time, RK")
+plt.title("Energy of Mars as function of time")
 plt.plot(t, E_M, color = "olive", label = "Total energy")
 plt.plot(t, Ek_M, color = "teal", label = "Kinetic energy")
 plt.plot(t, Ep_M, color = "darkblue", label = "Potential energy")
