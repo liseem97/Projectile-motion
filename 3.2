@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+#GM=1.989*10**30*6.67408*10**(-11)
 LEO = (6371+322)*10**3 
 GEO = (35680+6371)*10**3                    #Aphelion distance (radius of path) [AU] (1.5e11 [m])
 G = 6.67*10**(-11)        #Mass of Sun*Gravitaional constant [AU^3/yr^2]
@@ -28,11 +28,12 @@ deltaV2=V2-V2_t
 
 #print(deltaV1+deltaV2, V1-V2)
 
-T_LEO = 2*3.14*LEO/V0                      #Orbital period [yr] (3.2e7 [s])
+T_LEO = 2*3.14*LEO/V0  
+T_GEO = 2*3.14*GEO/V2                    #Orbital period [yr] (3.2e7 [s])
 
 t_max = T_LEO
-dt = 0.8          #time step / tau
-orbits=20
+dt = 0.5          #time step / tau
+orbits=25
 N = int(t_max/dt)*orbits
 #t=np.linspace(0,t_max,N)
 
@@ -67,8 +68,8 @@ Ep[0] = C * mS / (np.sqrt(X[0]**2 + Y[0]**2))
 E[0]=Ek[0]+Ep[0]
 t[0]=0
 
-
-i = 1
+"""
+i=1
 inc=1.2
 switch1 = True
 switch2 = True
@@ -122,9 +123,103 @@ for n in range(N-1):
        t2=t[n+1]
        V[n+1]=V[n+1]-deltaV2
        print("V2", V[n+1], deltaV2)
+"""
+i = 1
+m=5
+deltaR=1.7*(GEO-LEO)/m
+t_next=t_max*50
+print(deltaR)
+timer=0
+switch=False
+for n in range(N-1):
+    t[n+1]=t[n]+dt
+      #print("Time: ", t[n+1])
+    k_x1 = dt * F( X[n], Y[n], U[n], V[n] )
+    k_y1 = dt * G( X[n], Y[n], U[n], V[n] )
+    k_u1 = dt * H( X[n], Y[n], U[n], V[n] )
+    k_v1 = dt * I( X[n], Y[n], U[n], V[n] )
+    
+    k_x2 = dt * F( X[n] + k_x1/2, Y[n] + k_y1/2, U[n] + k_u1/2, V[n] + k_v1/2 )
+    k_y2 = dt * G( X[n] + k_x1/2, Y[n] + k_y1/2, U[n] + k_u1/2, V[n] + k_v1/2 )
+    k_u2 = dt * H( X[n] + k_x1/2, Y[n] + k_y1/2, U[n] + k_u1/2, V[n] + k_v1/2 )
+    k_v2 = dt * I( X[n] + k_x1/2, Y[n] + k_y1/2, U[n] + k_u1/2, V[n] + k_v1/2 )
+    
+    k_x3 = dt * F( X[n] + k_x2/2, Y[n] + k_y2/2, U[n] + k_u2/2, V[n] + k_v2/2 )
+    k_y3 = dt * G( X[n] + k_x2/2, Y[n] + k_y2/2, U[n] + k_u2/2, V[n] + k_v2/2 )
+    k_u3 = dt * H( X[n] + k_x2/2, Y[n] + k_y2/2, U[n] + k_u2/2, V[n] + k_v2/2 )
+    k_v3 = dt * I( X[n] + k_x2/2, Y[n] + k_y2/2, U[n] + k_u2/2, V[n] + k_v2/2 )
+    
+    k_x4 = dt * F( X[n] + k_x3, Y[n] + k_y3, U[n] + k_u3, V[n] + k_v3 )
+    k_y4 = dt * G( X[n] + k_x3, Y[n] + k_y3, U[n] + k_u3, V[n] + k_v3 )
+    k_u4 = dt * H( X[n] + k_x3, Y[n] + k_y3, U[n] + k_u3, V[n] + k_v3 )
+    k_v4 = dt * I( X[n] + k_x3, Y[n] + k_y3, U[n] + k_u3, V[n] + k_v3 )
+    
+    X[n+1] = X[n] + k_x1/6 + k_x2/3 + k_x3/3 + k_x4/6
+    Y[n+1] = Y[n] + k_y1/6 + k_y2/3 + k_y3/3 + k_y4/6
+    U[n+1] = U[n] + k_u1/6 + k_u2/3 + k_u3/3 + k_u4/6
+    V[n+1] = V[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
 
-delta_t=t2-t1
-print("Net velocity increase: ", deltaV1+deltaV2, " Time between velocity changes: ", delta_t)
+    timer+=dt
+    #print(timer)
+    
+    #Ek[n+1] = 0.5 * mS * (U[n+1]**2 + V[n+1]**2)
+    #Ep[n+1] = C*mS / (np.sqrt(X[n+1]**2 + Y[n+1]**2))
+    #E[n+1] = Ek[n+1] + Ep[n+1]
+  
+    
+    if(timer>=t_next and switch==True):
+        R_test=np.sqrt(X[n+1]**2+Y[n+1]**2)
+        #R2=R1+deltaR
+        #Rt=(R1+R2)/2
+
+        V_test=np.sqrt(U[n+1]**2+V[n+1]**2)
+        #V1_t=np.sqrt(-C*(2/R1-1/(Rt)))
+        #V2_t=np.sqrt(-C*(2/R2-1/(Rt)))
+        
+        #deltaV1=abs(V1_t-V1)
+        #deltaV2=abs(V2-V2_t)
+        print("Predicted speed: ",V2_t, " Actual speed: ",V_test, "Difference: ",V2_t-V_test)
+        print("Predicted time: ",t_next, " Actual time: ",timer, "Difference: ",t_next-timer)
+        print("Predicted distance: ",R2, " Actual distance: ",R_test, "Difference: ",R2-R_test)
+
+        switch=False
+        #print("ny R: ",V[n+1],a,U[n+1])
+        V[n+1]=V[n+1]*(1+deltaV2/V2)
+        U[n+1]=U[n+1]*(1+deltaV2/V2)
+        #print("V1", V[n+1], deltaV1)
+        print("deltav2", i,V[n+1], U[n+1], N-1-n)
+        #i=10
+        
+    if (n==(i*int((N-1)/m)) and switch==False):
+        R1=np.sqrt(X[n+1]**2+Y[n+1]**2)
+        R2=R1+deltaR
+        Rt=(R1+R2)/2
+
+        V1=np.sqrt(U[n+1]**2+V[n+1]**2)
+        V2 = np.sqrt(-C/R2)
+        V1_t=np.sqrt(-C*(2/R1-1/(Rt)))
+        V2_t=np.sqrt(-C*(2/R2-1/(Rt)))
+        
+        deltaV1=abs(V1_t-V1)
+        deltaV2=abs(V2-V2_t)
+        
+        t_next = np.sqrt(np.pi**2*Rt**3/-C)
+        print(t_next, timer)
+        timer=0
+        
+        V[n+1]=V[n+1]*(1+deltaV1/V1)
+        U[n+1]=U[n+1]*(1+deltaV1/V1)
+        print(V1, np.sqrt(U[n+1]**2+V[n+1]**2), deltaV1)
+        #print("V1", V[n+1], deltaV1)
+        print("deltav1", i,V[n+1], U[n+1], N-1-n)
+        switch=True
+        i+=1
+        
+        
+
+
+#delta_t=t2-t1
+#print("Net velocity increase: ", deltaV1+deltaV2, " Time between velocity changes: ", delta_t)
 
 #Plots_______________________________________________
 xlist=np.linspace(-GEO,GEO,1000)
@@ -144,8 +239,8 @@ for i in range (len(xlist)-1):
 plt.figure()
 plt.title("4th order Runge-Kutta")
 plt.plot(X/1000, Y/1000, color = "crimson", label = "Satellite orbit")
-#plt.plot(xlist/1000,geolist1/1000,color="darkblue", label="GEO orbit")
-#plt.plot(xlist/1000,geolist2/1000,color="darkblue")
+plt.plot(xlist/1000,geolist1/1000,color="darkblue", label="GEO orbit")
+plt.plot(xlist/1000,geolist2/1000,color="darkblue")
 plt.plot(xlist/1000,leolist1/1000,color="orange", label="LEO orbit")
 plt.plot(xlist/1000,leolist2/1000,color="orange")
 plt.axis("equal")
