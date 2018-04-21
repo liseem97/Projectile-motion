@@ -1,20 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Apr 20 10:07:17 2018
 
-@author: auroragrefsrud
-"""
-
+#Exercise 2.2 Perihelion shift
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import stats
 
 T = 0.2408                  #Orbital period [yr] (3.2e7 [s])
 R = 0.4668427                 #Aphelion distance (radius of path) [AU] (1.5e11 [m])
 GM = 4*(np.pi**2)           #Mass of Sun*Gravitaional constant [AU^3/yr^2]
 m = (4*(np.pi**2))/332950   #Mass of Earth [AU^3/yr^2] (6.0e24 [kg])
 mM = 0.056*m                #Mass of Mercury
-#a = 0.004                  #Alpha - try different values [AU^2] a = 0.004
 
   
 C = -(GM)
@@ -29,7 +25,7 @@ V0 = 8.194168
 
 t_max = 2*np.pi*np.sqrt((0.3871)**3/GM)
 #dt = 0.1
-dt = 0.001
+dt = 0.0001
 rounds=5
 N = int(t_max/dt)*rounds
 N_round=int(t_max/dt)
@@ -44,21 +40,14 @@ def G(X_, Y_, U_, V_):  #dY/dt
 
 def H(X_, Y_, U_, V_, A_):  #dU/dt
     return C * ((X_**2+Y_**2)**(-3/2)) * (1+(A_/(X_**2+Y_**2))) * X_    #With precession
-    #return C * ((X_**2+Y_**2)**(-3/2)) * X_                           #Without precession
 
 def I(X_, Y_, U_, V_, A_): #dV/dt
     return C * ((X_**2+Y_**2)**(-3/2)) * (1+(A_/(X_**2+Y_**2))) * Y_    #With precession
-    #return C * ((X_**2+Y_**2)**(-3/2))*Y_                             #Without precession
 
 
 N_a= 50
 alpha = np.linspace(0, 1.0*10**(-3), N_a)
-#lastY = np.zeros(len(Y)-1)
-#alpha = np.arange(1.0*10**(-8), 1, 1/(N-1))
-#print("alpha = ",alpha)
 theta = np.zeros(len(alpha))
-#alpha[0] = 0
-#theta[0] = 0
 
 X = np.zeros(N)
 Y = np.zeros(N)
@@ -68,7 +57,6 @@ V = np.zeros(N)
 R = np.zeros(N)
 
 for i in range(N_a):
-    #print(i)
     X[0] = X0
     Y[0] = Y0
     U[0] = U0
@@ -105,62 +93,60 @@ for i in range(N_a):
         V[n+1] = V[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
 
         R[n+1] = np.sqrt((X[n+1]**2)+(Y[n+1]**2)) 
-        #print(R[n+1],X[n+1],Y[n+1])
-        
+
     y_rounds = np.zeros((rounds,N_round*2))
     r_rounds = np.zeros((rounds,N_round*2))
     switch=False
     p=0
     k=0
-    #print(len(Y),rounds*N_round)
     for m in range (rounds):
         y_rounds[m][0]=Y[k]
-        #print(Y[k])
         r_rounds[m][0]=R[k] 
         for n in range(N_round+5):
-            #print(k)
-            #print(Y[k],n,N_round-1)
             k+=1
             if k==N:
                 break
-            #print(Y[n])
             if (Y[k]<0 and switch==False):
-                #print("switch")
                 switch=True
                 
             if (Y[k]>0 and switch ==True):
                 switch=False
-                #print("break",k, Y[k],m)
                 break
             y_rounds[m][n+1]=Y[k]
             r_rounds[m][n+1]=R[k]   
- 
-    #print(Y,y_rounds)
-            
+
     indexes=np.zeros(rounds) 
-    thetas=np.zeros(rounds)
+    thetas=np.zeros(rounds-1)
     
-    
-    #print(y_rounds)
     for j in range (rounds):
         perihelions[j]=np.min(r_rounds[j][np.nonzero(r_rounds[j])])
         indexes[j]=np.argmin(r_rounds[j][np.nonzero(r_rounds[j])])
-        #print(j)
-    print(perihelions)
+
     for j in range (1,rounds):
         dy=abs(y_rounds[j][indexes[j-1]]-y_rounds[j][indexes[j]])
-        #print(j,dy, perihelions[j])
-        thetas[j]=np.arctan(dy/perihelions[j])
-    #print(thetas)
+        thetas[j-1]=np.arctan(dy/perihelions[j])
+    print(thetas)
     theta[i]=np.average(thetas)
-    #theta=thetas[0]
 
 
+slope, intercept, r_value, p_value, std_err = stats.linregress(alpha,theta)
+print(slope,intercept)
 
+xlist=np.linspace(0,10**(-7),100)
+linreg=np.zeros(len(xlist))
+realalpha=np.zeros(len(xlist))
+for i in range (len(xlist)):
+    linreg[i]=slope*xlist[i]
 
+realTheta = np.zeros(len(xlist))
+for n in range(len(xlist)):
+    realTheta[n] = 2.1*10**(-6)
+realalpha = 1.1*10**(-8)
+
+    
 plt.figure()
-plt.title("4th order Runge-Kutta")
-plt.plot(X, Y, color = "crimson", label = "Earth orbit")
+plt.title((r"Position of Mercury's orbit with $\alpha$ = 0.001"))
+plt.plot(X, Y, color = "crimson", label = "Mercury's orbit")
 plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
 plt.legend(loc = 4)
 plt.xlabel(r"$x$ [AU]")
@@ -171,38 +157,21 @@ plt.show()
 
 
 plt.figure()
-plt.title("Perihelion shift as function of alpha")
-plt.plot(theta, alpha, color = 'blue')
+plt.title((r"Perihelion shift as function of $\alpha$"))
+plt.plot(alpha, theta, color = 'blue')
 #plt.plot(realTheta, alpha, color = 'red')
-plt.xlabel(r"$\theta$")
-plt.ylabel(r"$\alpha$")
+plt.xlabel(r"$\alpha$")
+plt.ylabel(r"$\theta$")
 plt.grid()
 plt.show()
 
-"""
 plt.figure()
-plt.plot(alpha, lastY)
+plt.title((r"Perihelion shift as function of $\alpha$ using linear regression"))
+plt.plot(xlist, linreg, color = 'blue', label = r"Predicted $\theta$")
+plt.plot(xlist, realTheta, color = 'red', label = r"Real $\theta$")
+plt.axvline(x=realalpha, label=(r"Einstein's $\alpha$"), color="green")
+plt.legend(loc=4)
 plt.xlabel(r"$\alpha$")
-plt.ylabel("Y[-1]")
+plt.ylabel(r"$\theta$")
+plt.grid()
 plt.show()
-
-
-#print("Y = ",Y)
-#if (t_max == T): 
-  #Find offset
-  #print()
-  #print("Offset in x: %0.3e - %0.7e = %0.7e" % (X[0], X[-1], X[N-1]-X[0]))
-  #print("Offset in y: %0.3e - %0.7e = %0.7e" % (Y[0], Y[-1], Y[N-1]-Y[0]))
-  #print("Total offset: %0.3e" % np.sqrt((X[0]-X[-1])**2+(Y[0]-Y[-1])**2))
-  
-  #Find perihelion seperation
-  #r_perihelion = abs(min(Y))
-  #print(Y)
-  #print("\nThe parahelion seperation is %0.3f, compared to 0.967." % r_perihelion)
-
-realTheta = np.zeros(N-1)
-for n in range(N-1):
-    realTheta[n] = t_max * (43/3600)* (1/100)
-  
-print("realtheta = ", realTheta[0],theta[-1])
-"""
