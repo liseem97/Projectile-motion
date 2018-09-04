@@ -1,0 +1,76 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+T = 1                       #Orbital period [yr] (3.2e7 [s])
+R = 1                       #Aphelion distance (radius of path) [AU] (1.5e11 [m])
+GM = 4*(np.pi**2)           #Mass of Sun*Gravitaional constant [AU^3/yr^2]
+m = (4*(np.pi**2))/332950   #Mass of Earth [AU^3/yr^2] (6.0e24 [kg])
+
+C = -(GM)/(R**3)
+
+#Initial conditions
+X0 = 1
+Y0 = 0
+U0 = 0
+V0 = 2*np.pi
+
+t_max = 1
+dt = 0.0001             #time step / tau
+N = int(t_max/dt)
+
+#RUNGE-KUTTA (4th order)
+def F(X_, Y_, U_, V_):  #dX/dt
+  return U_
+
+def G(X_, Y_, U_, V_):  #dY/dt
+  return V_
+
+def H(X_, Y_, U_, V_):  #dU/dt
+  return C*X_
+
+def I(X_, Y_, U_, V_): #dV/dt
+    return C*Y_
+
+X_RK = np.zeros(N)
+Y_RK = np.zeros(N)
+U_RK = np.zeros(N)
+V_RK = np.zeros(N)
+E_RK = np.zeros(N-1)    #Total energy/mass
+Ek_RK = np.zeros(N-1)   #Kinetic energy
+Ep_RK = np.zeros(N-1)   #Potential energy
+
+X_RK[0] = X0
+Y_RK[0] = Y0
+U_RK[0] = U0
+V_RK[0] = V0
+
+for n in range(N-1):
+  k_x1 = dt * F( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+  k_y1 = dt * G( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+  k_u1 = dt * H( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+  k_v1 = dt * I( X_RK[n], Y_RK[n], U_RK[n], V_RK[n] )
+    
+  k_x2 = dt * F( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+  k_y2 = dt * G( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+  k_u2 = dt * H( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+  k_v2 = dt * I( X_RK[n] + k_x1/2, Y_RK[n] + k_y1/2, U_RK[n] + k_u1/2, V_RK[n] + k_v1/2 )
+    
+  k_x3 = dt * F( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+  k_y3 = dt * G( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+  k_u3 = dt * H( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+  k_v3 = dt * I( X_RK[n] + k_x2/2, Y_RK[n] + k_y2/2, U_RK[n] + k_u2/2, V_RK[n] + k_v2/2 )
+    
+  k_x4 = dt * F( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+  k_y4 = dt * G( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+  k_u4 = dt * H( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+  k_v4 = dt * I( X_RK[n] + k_x3, Y_RK[n] + k_y3, U_RK[n] + k_u3, V_RK[n] + k_v3 )
+    
+  X_RK[n+1] = X_RK[n] + k_x1/6 + k_x2/3 + k_x3/3 + k_x4/6
+  Y_RK[n+1] = Y_RK[n] + k_y1/6 + k_y2/3 + k_y3/3 + k_y4/6
+  U_RK[n+1] = U_RK[n] + k_u1/6 + k_u2/3 + k_u3/3 + k_u4/6
+  V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
+
+  Ek_RK[n] = 0.5 * m * np.sqrt(U_RK[n]**2 + V_RK[n]**2)
+  Ep_RK[n] = -((GM) * m) / (np.sqrt(X_RK[n]**2 + Y_RK[n]**2))
+  E_RK[n] = Ek_RK[n] + Ep_RK[n]
