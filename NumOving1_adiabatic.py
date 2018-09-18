@@ -3,7 +3,7 @@
 Created on Mon Sep 17 20:49:47 2018
 
 @author: lise
-@og aurora
+@og aurora HELLO 
 """
 
 import numpy as np
