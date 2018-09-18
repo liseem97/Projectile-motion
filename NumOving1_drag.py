@@ -16,7 +16,7 @@ B_2 = 4*10**(-5)
 #Initial conditions
 X0 = 0
 Y0 = 0
-theta = np.pi/4
+theta = np.deg2rad(39)  #39 grader gir lengst kast. 
 V_start = 700
 U0 = V_start*np.cos(theta)
 V0 = V_start*np.sin(theta)
@@ -36,12 +36,12 @@ def G(X_, Y_, U_, V_):          #dY/dt
     return V_
 
 def H(X_, Y_, U_, V_):          #dU/dt
-    V = (U_**2+V_**2)**(1/2)
-    return -B_2*V*U_
+    #V = (U_**2+V_**2)**(1/2)
+    return -B_2*(U_**2) #*V
 
 def I(X_, Y_, U_, V_):          #dV/dt
-    V = (U_**2+V_**2)**(1/2)
-    return C - B_2*V*V_
+    #V = (U_**2+V_**2)**(1/2)
+    return C - B_2*(V_**2) #*V
 
 def RK(X0, Y0, U0, V0, t_min, t_max, tau):    
     dt_RK = tau
@@ -86,8 +86,11 @@ def RK(X0, Y0, U0, V0, t_min, t_max, tau):
         U_RK[n+1] = U_RK[n] + k_u1/6 + k_u2/3 + k_u3/3 + k_u4/6
         V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
         
+        if Y_RK[n+1] < 0 and Y_RK[n] > 0:
+            r = - Y_RK[n] / Y_RK[n+1]
+            x_l = (X_RK[n] + r*X_RK[n+1])/(r + 1)
     
-    return X_RK, Y_RK, U_RK, V_RK, t_RK
+    return X_RK, Y_RK, U_RK, V_RK, x_l, t_RK
 
 
 
@@ -106,38 +109,17 @@ def analytical(X0, Y0, U0, V0, times):
 ###code to run
      
 RK = RK(X0, Y0, U0, V0, t_min, t_max, dt) 
-AN = analytical(X0, Y0, U0, V0, RK[4])
+AN = analytical(X0, Y0, U0, V0, RK[5])
 
-#interpolate
-#finne punktene:
-yn = 10000
-yn1 = -10000
-n = 0
-n1 = 0
-for i in range(len(RK[4])):
-    y_temp = RK[1][i]
-    if (y_temp > 0 and y_temp < yn):
-        yn = y_temp
-        n = i
-    if (y_temp < 0 and y_temp > yn1):
-        yn1 = y_temp
-        n1 = i
-
-#interpolere:
-r = - yn / yn1
-xn = RK[0][n]
-xn1 = RK[0][n1]
-x_l = (xn + r*xn1)/(r + 1)
-
-print("Landingpoint: ", x_l, "m ")
+print("Landingpoint: ", RK[4], "m ")
 
 
 #RK   
 plt.figure()
 plt.title("Position")
 plt.plot(RK[0], RK[1], color = "darkblue", label = "Projectile path RK")
-plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
-#plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
+#plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
 plt.legend(loc = 4)
 plt.xlabel(r"$x$ [m]")
 plt.ylabel(r"$y$ [m]")
@@ -148,8 +130,8 @@ plt.show()
 
 #plt.figure()
 #plt.title("Velocity")
-#plt.plot(RK[4], RK[2], color = "darkblue", label = "X-velocity")
-#plt.plot(RK[4], RK[3], color = "red", label = "Y-velocity")
+#plt.plot(RK[5], RK[2], color = "darkblue", label = "X-velocity")
+#plt.plot(RK[5], RK[3], color = "red", label = "Y-velocity")
 ##plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
 #plt.legend(loc = 4)
 #plt.xlabel(r"$x$ [s]")

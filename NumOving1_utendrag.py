@@ -15,7 +15,7 @@ V0 = V*np.sin(theta)
 print(U0," ",V0)
 
 t_min = 0
-t_max = 100
+t_max = 102
 dt = 0.01             #time step / tau
 N = int(t_max/dt)
 
@@ -103,7 +103,7 @@ AN = analytical(X0, Y0, U0, V0, RK[4])
 plt.figure()
 plt.title("Position numerical")
 plt.plot(RK[0], RK[1], color = "darkblue", label = "Projectile path RK")
-#plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
 #plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
 plt.legend(loc = 4)
 plt.xlabel(r"$x$ [m]")
@@ -127,16 +127,16 @@ plt.show()
 ##plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
 #plt.show()
 
-#analytical
-plt.figure()
-plt.title("Position analytical")
-#plt.plot(RK[0], RK[1], color = "darkblue", label = "Projectile path RK")
-plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
-#plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
-plt.legend(loc = 4)
-plt.xlabel(r"$x$ [m]")
-plt.ylabel(r"$y$ [m]")
-#"plt.axis("equal")
-plt.grid()
-#plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
-plt.show()
+##analytical
+#plt.figure()
+#plt.title("Position analytical")
+##plt.plot(RK[0], RK[1], color = "darkblue", label = "Projectile path RK")
+#plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+##plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
+#plt.legend(loc = 4)
+#plt.xlabel(r"$x$ [m]")
+#plt.ylabel(r"$y$ [m]")
+##"plt.axis("equal")
+#plt.grid()
+##plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
+#plt.show()
