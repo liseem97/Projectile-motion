@@ -23,7 +23,7 @@ T_0 = 288.15 #tilsvarer 15 grader celsius
 #Initial conditions
 X0 = 0
 Y0 = 0
-theta = np.deg2rad(45) #Har samme som adiabatisk modell
+theta = np.deg2rad(43.7688442211) #Har samme som adiabatisk modell
 V_start = 1640
 U0 = V_start*np.cos(theta)
 V0 = V_start*np.sin(theta)
@@ -43,14 +43,14 @@ def G(X_, Y_, U_, V_):          #dY/dt
     return V_
 
 def H(X_, Y_, U_, V_):          #dU/dt
-    #V = (U_**2+V_**2)**(1/2)
+    V = (U_**2+V_**2)**(1/2)
     AD = (1 - ((a*Y_)/T_0))**alpha #airdensity adiabatic
-    return -B_2*AD*(U_**2) #* V
+    return -B_2*AD*U_*V
 
 def I(X_, Y_, U_, V_):          #dV/dt
-    #V = (U_**2+V_**2)**(1/2)
+    V = (U_**2+V_**2)**(1/2)
     AD = (1 - ((a*Y_)/T_0))**alpha #airdensity adiabatic
-    return C - B_2*AD*(V_**2) #*V
+    return C - B_2*AD*V_*V
 
 def RK(X0, Y0, U0, V0, t_min, t_max, tau):    
     dt_RK = tau
@@ -99,30 +99,34 @@ def RK(X0, Y0, U0, V0, t_min, t_max, tau):
             r = - Y_RK[n] / Y_RK[n+1]
             x_l = (X_RK[n] + r*X_RK[n+1])/(r + 1)
             t_l = (t_RK[n] + t_RK[n+1])/2
+        
     
     return X_RK, Y_RK, U_RK, V_RK, x_l, t_RK, t_l
 
 
 #analytical solution OBS DENNE ER UTEN DRAG OG LUFTFUKTIGHET
-def analytical(X0, Y0, U0, V0, times):
-    X_A = np.zeros(len(times))
-    Y_A = np.zeros(len(times))
-    i = 0
-    for i in range(0, len(times)):
-        Y_A[i] = -0.5*g*times[i]**2 + times[i]*V0 + Y0
-        X_A[i] = V0*times[i] + X0
-        
-    return X_A, Y_A
+#def analytical(X0, Y0, U0, V0, times):
+#    X_A = np.zeros(len(times))
+#    Y_A = np.zeros(len(times))
+#    i = 0
+#    for i in range(0, len(times)):
+#        Y_A[i] = -0.5*g*times[i]**2 + times[i]*V0 + Y0
+#        X_A[i] = V0*times[i] + X0
+#        
+#    return X_A, Y_A
    
 
 ###code to run
      
 RK = RK(X0, Y0, U0, V0, t_min, t_max, dt) 
-AN = analytical(X0, Y0, U0, V0, RK[5])
+#AN = analytical(X0, Y0, U0, V0, RK[5])
+
+y_best = np.amax(RK[1])
 
 
 print("Landingpoint: ", RK[4], "m ")
 print("Time of fligth: ", RK[6], "s ")
+print("Best height: ", y_best , "m ")
 
 #RK   
 plt.figure()
@@ -130,10 +134,10 @@ plt.title("Position")
 plt.plot(RK[0], RK[1], color = "darkblue", label = "Projectile path RK")
 #plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
 plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
-plt.legend(loc = 4)
+plt.legend()
 plt.xlabel(r"$x$ [m]")
 plt.ylabel(r"$y$ [m]")
-plt.axis([0,120000,0,40000])
+plt.axis([0,80000,0,40000])
 plt.grid()
 #plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
 plt.show()

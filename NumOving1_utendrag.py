@@ -8,7 +8,7 @@ C = -g
 #Initial conditions
 X0 = 0
 Y0 = 0
-theta = np.pi/4
+theta = np.deg2rad(45)
 V=700
 U0 = V*np.cos(theta)
 V0 = V*np.sin(theta)

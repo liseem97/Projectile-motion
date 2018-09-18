@@ -3,7 +3,7 @@
 Created on Mon Sep 17 20:49:47 2018
 
 @author: lise
-@og aurora HELLO 
+@og aurora 
 """
 
 import numpy as np
@@ -41,14 +41,14 @@ def G(X_, Y_, U_, V_):          #dY/dt
     return V_
 
 def H(X_, Y_, U_, V_):          #dU/dt
-    #V = (U_**2+V_**2)**(1/2)
+    V = (U_**2+V_**2)**(1/2)
     AD = (1 - ((a*Y_)/T_0))**alpha #airdensity adiabatic
-    return -B_2*AD*(U_**2) #*V
+    return -B_2*AD*U_*V
 
 def I(X_, Y_, U_, V_):          #dV/dt
-    #V = (U_**2+V_**2)**(1/2)
+    V = (U_**2+V_**2)**(1/2)
     AD = (1 - ((a*Y_)/T_0))**alpha #airdensity adiabatic
-    return C - B_2*AD*(V_**2) #*V
+    return C - B_2*AD*V_*V
 
 def RK(X0, Y0, U0, V0, t_min, t_max, tau, theta):    
     dt_RK = tau
@@ -102,15 +102,15 @@ def RK(X0, Y0, U0, V0, t_min, t_max, tau, theta):
 
 
 #analytical solution OBS DENNE ER UTEN DRAG OG LUFTFUKTIGHET
-def analytical(X0, Y0, U0, V0, times):
-    X_A = np.zeros(len(times))
-    Y_A = np.zeros(len(times))
-    i = 0
-    for i in range(0, len(times)):
-        Y_A[i] = -0.5*g*times[i]**2 + times[i]*V0 + Y0
-        X_A[i] = V0*times[i] + X0
-        
-    return X_A, Y_A
+#def analytical(X0, Y0, U0, V0, times):
+#    X_A = np.zeros(len(times))
+#    Y_A = np.zeros(len(times))
+#    i = 0
+#    for i in range(0, len(times)):
+#        Y_A[i] = -0.5*g*times[i]**2 + times[i]*V0 + Y0
+#        X_A[i] = V0*times[i] + X0
+#        
+#    return X_A, Y_A
    
 
 ###code to run
@@ -132,14 +132,14 @@ for i in range(len(thetas)):
         bestTheta= thetas[i]
         bestIndex= i
     
-print(bestTheta, bestRange)
+print("bestTheta: ",bestTheta,"bestRange: ", bestRange)
 
 theta = np.deg2rad(bestTheta)
 V_start = 700
 U0 = V_start*np.cos(theta)
 V0 = V_start*np.sin(theta)
 RK_info = RK(X0, Y0, U0, V0, t_min, t_max, dt, theta) 
-AN = analytical(X0, Y0, U0, V0, RK_info[5])
+#AN = analytical(X0, Y0, U0, V0, RK_info[5])
 print("Landingpoint: ", RK_info[4], "m ")
 
 #Best theta = 44.98
@@ -161,6 +161,7 @@ plt.show()
 plt.figure()
 plt.title("Range as function of angle")
 plt.plot(thetas, ranges, color = "darkblue", label = "Range")
+plt.plot(bestTheta, bestRange, color = "darkorange", marker = "o", markersize = 5, label = "best theta")
 #plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
 plt.legend(loc = 4)
 plt.xlabel(r"$x$ [radians]")

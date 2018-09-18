@@ -32,12 +32,12 @@ def G(X_, Y_, U_, V_):          #dY/dt
     return V_
 
 def H(X_, Y_, U_, V_):          #dU/dt
-    #V = (U_**2+V_**2)**(1/2)
-    return -B_2*(U_**2) #*V
+    V = (U_**2+V_**2)**(1/2)
+    return -B_2*U_*V
 
 def I(X_, Y_, U_, V_):          #dV/dt
-    #V = (U_**2+V_**2)**(1/2)
-    return C - B_2*(V_**2) #*V
+    V = (U_**2+V_**2)**(1/2)
+    return C - B_2*V_*V
 
 def RK(X0, Y0, U0, V0, t_min, t_max, tau, angle):  
     print("here")
@@ -92,16 +92,16 @@ def RK(X0, Y0, U0, V0, t_min, t_max, tau, angle):
 
 
 #analytical solution OBS DENNE ER UTEN DRAG
-def analytical(X0, Y0, U0, V0, times):
-    X_A = np.zeros(len(times))
-    Y_A = np.zeros(len(times))
-    i = 0
-    for i in range(0, len(times)):
-        Y_A[i] = -0.5*g*times[i]**2 + times[i]*V0 + Y0
-        X_A[i] = V0*times[i] + X0
-        
-    return X_A, Y_A
-   
+#def analytical(X0, Y0, U0, V0, times):
+#    X_A = np.zeros(len(times))
+#    Y_A = np.zeros(len(times))
+#    i = 0
+#    for i in range(0, len(times)):
+#        Y_A[i] = -0.5*g*times[i]**2 + times[i]*V0 + Y0
+#        X_A[i] = V0*times[i] + X0
+#        
+#    return X_A, Y_A
+#   
 
 ###code to run
 thetas = np.linspace(0, 90, 50)
@@ -127,7 +127,7 @@ V_start = 700
 U0 = V_start*np.cos(theta)
 V0 = V_start*np.sin(theta)
 RK_info = RK(X0, Y0, U0, V0, t_min, t_max, dt, theta) 
-AN = analytical(X0, Y0, U0, V0, RK_info[5])
+#AN = analytical(X0, Y0, U0, V0, RK_info[5])
 print("Landingpoint: ", RK_info[4], "m ")
 
 #Best theta = 40.41
