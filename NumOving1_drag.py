@@ -16,11 +16,7 @@ B_2 = 4*10**(-5)
 #Initial conditions
 X0 = 0
 Y0 = 0
-theta = np.deg2rad(39)  #39 grader gir lengst kast. 
-V_start = 700
-U0 = V_start*np.cos(theta)
-V0 = V_start*np.sin(theta)
-print(U0," ",V0)
+#theta = np.deg2rad(39)  #39 grader gir lengst kast. 
 
 t_min = 0
 t_max = 100
@@ -43,10 +39,12 @@ def I(X_, Y_, U_, V_):          #dV/dt
     #V = (U_**2+V_**2)**(1/2)
     return C - B_2*(V_**2) #*V
 
-def RK(X0, Y0, U0, V0, t_min, t_max, tau):    
+def RK(X0, Y0, U0, V0, t_min, t_max, tau, angle):  
+    print("here")
     dt_RK = tau
     N_RK = int(t_max/dt_RK)
     t_RK = np.linspace(t_min, t_max, N_RK)
+    x_l=0
     
     X_RK = np.zeros(N_RK)   #Position x
     Y_RK = np.zeros(N_RK)   #Position y
@@ -89,7 +87,6 @@ def RK(X0, Y0, U0, V0, t_min, t_max, tau):
         if Y_RK[n+1] < 0 and Y_RK[n] > 0:
             r = - Y_RK[n] / Y_RK[n+1]
             x_l = (X_RK[n] + r*X_RK[n+1])/(r + 1)
-    
     return X_RK, Y_RK, U_RK, V_RK, x_l, t_RK
 
 
@@ -107,23 +104,56 @@ def analytical(X0, Y0, U0, V0, times):
    
 
 ###code to run
-     
-RK = RK(X0, Y0, U0, V0, t_min, t_max, dt) 
-AN = analytical(X0, Y0, U0, V0, RK[5])
+thetas = np.linspace(0, 90, 50)
+ranges = np.zeros(len(thetas))
+bestRange = 0;
+bestTheta = 0;
+for i in range(len(thetas)):
+    theta = np.deg2rad(thetas[i])
+    V_start = 700
+    U0 = V_start*np.cos(theta)
+    V0 = V_start*np.sin(theta)
+    print(U0," ",V0, i)
+    RK_info = RK(X0, Y0, U0, V0, t_min, t_max, dt, theta) 
+    ranges[i]=RK_info[4]
+    if(RK_info[4]>bestRange):
+        bestRange=RK_info[4]
+        bestTheta= thetas[i]
 
-print("Landingpoint: ", RK[4], "m ")
+print(bestTheta, bestRange)
 
+theta = np.deg2rad(bestTheta)
+V_start = 700
+U0 = V_start*np.cos(theta)
+V0 = V_start*np.sin(theta)
+RK_info = RK(X0, Y0, U0, V0, t_min, t_max, dt, theta) 
+AN = analytical(X0, Y0, U0, V0, RK_info[5])
+print("Landingpoint: ", RK_info[4], "m ")
+
+#Best theta = 40.41
 
 #RK   
 plt.figure()
 plt.title("Position")
-plt.plot(RK[0], RK[1], color = "darkblue", label = "Projectile path RK")
+plt.plot(RK_info[0], RK_info[1], color = "darkblue", label = "Projectile path RK")
 #plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
-plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
+plt.plot(RK_info[4], [0], color = "darkorange", marker = "o", markersize = 5)
 plt.legend(loc = 4)
 plt.xlabel(r"$x$ [m]")
 plt.ylabel(r"$y$ [m]")
-plt.axis([0,60000,0,15000])
+plt.axis([0,30000,0,15000])
+plt.grid()
+#plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
+plt.show()
+
+plt.figure()
+plt.title("Range as function of angle")
+plt.plot(thetas, ranges, color = "darkblue", label = "Range")
+#plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+plt.legend(loc = 4)
+plt.xlabel(r"$x$ [radians]")
+plt.ylabel(r"$y$ [m]")
+plt.axis([0,90,0,30000])
 plt.grid()
 #plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
 plt.show()
