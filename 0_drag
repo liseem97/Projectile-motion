@@ -1,22 +1,31 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Apr 21 14:41:08 2018
 
-@author: elveb
+"""
+Created on Tue Sep  4 12:56:39 2018
+
+@author: auroragrefsrud
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-T = 0.2408                  #Orbital period [yr] (3.2e7 [s])
-R = 0.47                    #Aphelion distance (radius of path) [AU] (1.5e11 [m])
-GMs = 4*(np.pi**2)           #Mass of Sun*Gravitaional constant [AU^3/yr^2]
-m = (4*(np.pi**2))/332950   #Mass of Earth [AU^3/yr^2] (6.0e24 [kg])
-mM = 0.056*m                #Mass of Mercury
+g=9.81
+C = -g
+D = 4*10**(-5)
 
-t_min = 0
-t_max = 0.2408
-dt = 0.0001
+
+#Initial conditions
+X0 = 0
+Y0 = 0
+theta = np.pi/4
+V=700
+U0 = V*np.cos(theta)
+V0 = V*np.sin(theta)
+print(U0," ",V0)
+
+t_max = 100
+dt = 0.01             #time step / tau
+N = int(t_max/dt)
+m = 20
 
 #RUNGE-KUTTA (4th order)
 def F(X_, Y_, U_, V_):          #dX/dt
@@ -26,14 +35,14 @@ def G(X_, Y_, U_, V_):          #dY/dt
     return V_
 
 def H(X_, Y_, U_, V_):          #dU/dt
-    return (-(GMs)/((np.sqrt(X_**2+Y_**2)**3)))*X_
+    return -D*(U_**2+V_**2)**(1/2)*U_
 
 def I(X_, Y_, U_, V_):          #dV/dt
-    return (-(GMs)/((np.sqrt(X_**2+Y_**2)**3)))*Y_
+    return C - D*(U_**2+V_**2)**(1/2)*V_
 
 def RK(X0, Y0, U0, V0, m, t_min, t_max, tau):    
     dt_RK = tau
-    N_RK = int(t_max/dt_RK)+50
+    N_RK = int(t_max/dt_RK)
     t_RK = np.linspace(t_min, t_max, N_RK)
     
     X_RK = np.zeros(N_RK)   #Position x
@@ -49,7 +58,7 @@ def RK(X0, Y0, U0, V0, m, t_min, t_max, tau):
     U_RK[0] = U0
     V_RK[0] = V0
     Ek_RK[0] = 0.5 * m * np.sqrt(U_RK[0]**2 + V_RK[0]**2)**2
-    Ep_RK[0] = -((GMs) * m) / (np.sqrt(X_RK[0]**2 + Y_RK[0]**2))
+    Ep_RK[0] = m*C*Y0
     E_RK[0] = Ek_RK[0] + Ep_RK[0]
     
     for n in range(N_RK-1):
@@ -79,42 +88,56 @@ def RK(X0, Y0, U0, V0, m, t_min, t_max, tau):
         V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
         
         Ek_RK[n+1] = 0.5 * m * np.sqrt(U_RK[n+1]**2 + V_RK[n+1]**2)**2
-        Ep_RK[n+1] = -((GMs) * m) / (np.sqrt(X_RK[n+1]**2 + Y_RK[n+1]**2))
+        Ep_RK[n+1] = m*C*Y_RK[n+1]
         E_RK[n+1] = Ek_RK[n+1] + Ep_RK[n+1]
     
     return X_RK, Y_RK, U_RK, V_RK, E_RK, Ek_RK, Ep_RK, t_RK
 
-RK = RK(R, 0, 0, 8.2, mM, t_min, t_max, dt)
+
+#analytical solution
+def analytical(X0, Y0, U0, V0, times):
+    X_A = np.zeros(len(times))
+    Y_A = np.zeros(len(times))
+    i = 0
+    for timestep in times:
+        Y_A[i] = -0.5*g*timestep**2 + timestep*V0 + Y0
+        X_A[i] = V0*timestep + X0
+        i=i+1
+    return X_A, Y_A
+   
+
+###code to run
+     
+RK = RK(X0, Y0, U0, V0, m, 0, t_max, dt) 
+AN = analytical(X0, Y0, U0,V0, RK[7])
+
+
+print(RK[7])
+#RK   
+plt.figure()
+plt.title("Position")
+plt.plot(RK[0], RK[1], color = "darkblue", label = "Projectile path RK")
+plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+#plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
+plt.legend(loc = 4)
+plt.xlabel(r"$x$ [m]")
+plt.ylabel(r"$y$ [m]")
+#"plt.axis("equal")
+plt.grid()
+#plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
+plt.show()
 
 plt.figure()
-plt.title("Position of Mercury around the Sun")
-plt.plot(RK[0], RK[1], color = "maroon", label = "Mercury orbit")
-plt.plot([0], [0], color = "darkorange", marker="o", markersize = 19, label = "Fixed Sun")
+plt.title("Velocity")
+plt.plot(RK[7], RK[2], color = "darkblue", label = "X-velocity")
+plt.plot(RK[7], RK[3], color = "red", label = "Y-velocity")
+#plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
 plt.legend(loc = 4)
-plt.xlabel(r"$x$ [AU]")
-plt.ylabel(r"$y$ [AU]")
+plt.xlabel(r"$x$ [s]")
+plt.ylabel(r"$y$ [m/s]")
+#plt.axis("equal")
 plt.grid()
-#plt.savefig("/Users/elveb/Documents/2_1_1.pdf")
+#plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
 plt.show()
 
-plt.title("Velocity as a function of time")
-plt.plot(RK[-1], RK[2], label = "Velocity in x-direction", color = "darkorange")
-plt.plot(RK[-1], RK[3], label = "Velocity in y-direction", color = "red")
-plt.plot(RK[-1], np.sqrt(RK[2]**2+RK[3]**2), label = "Absolute velocity", color = "maroon")
-plt.xlabel(r"$t$ [s]")
-plt.ylabel(r"$v$ [AU/yr]")
-plt.grid()
-plt.legend()
-#plt.savefig("/Users/elveb/Documents/2_1_2.pdf")
-plt.show()
-
-plt.title("Energy as a function of time")
-plt.plot(RK[-1], RK[5], label = "Kinetic energy", color = "darkorange")
-plt.plot(RK[-1], RK[6], label = "Potential energy", color = "red")
-plt.plot(RK[-1], RK[4], label = "Total energy", color = "maroon")
-plt.xlabel(r"$t$ [s]")
-plt.ylabel(r"$E$ [AU$^5$/yr$^4$]")
-plt.grid()
-plt.legend()
-#plt.savefig("/Users/elveb/Documents/2_1_3.pdf")
-plt.show()
+#analytical
