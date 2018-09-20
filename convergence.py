@@ -94,8 +94,11 @@ def RK(X0, Y0, U0, V0, t_min, t_max, tau):
         Ep_RK[n+1] = -C*Y_RK[n+1]
         E_RK[n+1] = Ek_RK[n+1] + Ep_RK[n+1]
         
+        if Y_RK[n+1] < 0 and Y_RK[n] > 0:
+            r = - Y_RK[n] / Y_RK[n+1]
+            x_l = (X_RK[n] + r*X_RK[n+1])/(r + 1)
     
-    return X_RK, Y_RK, U_RK, V_RK, E_RK, Ek_RK, Ep_RK, t_RK
+    return X_RK, Y_RK, U_RK, V_RK, x_l, E_RK, Ek_RK, Ep_RK, t_RK
 
 
 #analytical solution
@@ -108,6 +111,7 @@ def analytical(X0, Y0, U0, V0, times):
     Ep_A = np.zeros(len(times))
     E_A = np.zeros(len(times))
     i = 0
+    switch=False
     for i in range(0, len(times)):
         Y_A[i] = -0.5*g*times[i]**2 + times[i]*V0 + Y0
         X_A[i] = V0*times[i] + X0
@@ -116,18 +120,23 @@ def analytical(X0, Y0, U0, V0, times):
         Ek_A[i] = 0.5 * np.sqrt(U_A[i]**2 + V_A[i]**2)**2
         Ep_A[i] = -C*Y_A[i]
         E_A[i] = Ek_A[i]+Ep_A[i]
-    return X_A, Y_A, U_A, V_A, E_A
+
+        if Y_A[i]<0 and switch ==False:
+            x_1 = X_A[i]
+            switch = True
+    return X_A, Y_A, U_A, V_A, x_1, E_A
    
 
 ###code to run
-timesteps = np.linspace(0.0001,0.1,100)
+timesteps = np.linspace(0.001,0.1,50)
 positions = np.zeros(len(timesteps))
 for i in range (len(timesteps)):
-    print(i)
     dt = timesteps[i]
+    print(i, " ",dt )
     RK_test = RK(X0, Y0, U0, V0, t_min, t_max, dt) 
     AN = analytical(X0, Y0, U0, V0, RK_test[-1])
-    positions[i] = abs(RK_test[0][-1]-AN[0][-1])
+    print(RK_test[4], "analytical: ", AN[4], "difference: ", AN[4]-RK_test[4], "tolerance: ", dt*AN[2][-1])
+    positions[i] = abs(RK_test[4]-AN[4])
     #print("time: ", RK_test[-1][-1], " y-position: ", RK_test[1][-1], " and ", AN[1][-1])
     
 #fig = plt.figure(figsize=(8, 2))

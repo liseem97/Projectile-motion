@@ -29,7 +29,7 @@ V_start = 700
 
 t_min = 0
 t_max = 200
-dt = 0.1             #time step / tau
+dt = 0.01             #time step / tau
 N = int(t_max/dt)
 
 
@@ -142,7 +142,7 @@ RK_info = RK(X0, Y0, U0, V0, t_min, t_max, dt, theta)
 #AN = analytical(X0, Y0, U0, V0, RK_info[5])
 print("Landingpoint: ", RK_info[4], "m ")
 
-#Best theta = 44.98
+#Best theta = 43.8693467337
 
 #RK   
 plt.figure()

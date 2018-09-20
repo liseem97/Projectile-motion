@@ -15,8 +15,8 @@ V0 = V*np.sin(theta)
 print(U0," ",V0)
 
 t_min = 0
-t_max = 102
-dt = 0.1             #time step / tau
+t_max = 110
+dt = 0.8        #time step / tau
 N = int(t_max/dt)
 
 
@@ -85,9 +85,12 @@ def RK(X0, Y0, U0, V0, t_min, t_max, tau):
         Ek_RK[n+1] = 0.5 * np.sqrt(U_RK[n+1]**2 + V_RK[n+1]**2)**2
         Ep_RK[n+1] = -C*Y_RK[n+1]
         E_RK[n+1] = Ek_RK[n+1] + Ep_RK[n+1]
-        
+
+        if Y_RK[n+1] < 0 and Y_RK[n] > 0:
+            r = - Y_RK[n] / Y_RK[n+1]
+            x_l = (X_RK[n] + r*X_RK[n+1])/(r + 1)
     
-    return X_RK, Y_RK, U_RK, V_RK, E_RK, Ek_RK, Ep_RK, t_RK
+    return X_RK, Y_RK, U_RK, V_RK, x_l, E_RK, Ek_RK, Ep_RK, t_RK
 
 
 #analytical solution
@@ -95,57 +98,67 @@ def analytical(X0, Y0, U0, V0, times):
     X_A = np.zeros(len(times))
     Y_A = np.zeros(len(times))
     i = 0
+    switch=False
+    x_1=0
     for i in range(0, len(times)):
         Y_A[i] = -0.5*g*times[i]**2 + times[i]*V0 + Y0
         X_A[i] = V0*times[i] + X0
-    return X_A, Y_A
+
+        if Y_A[i]<0 and switch ==False:
+            x_1 = X_A[i]
+            switch = True
+            
+    return X_A, Y_A, x_1
    
 
 ###code to run
      
-RK = RK(X0, Y0, U0, V0, t_min, t_max, dt) 
-AN = analytical(X0, Y0, U0, V0, RK[-1])
+RK_test = RK(X0, Y0, U0, V0, t_min, t_max, dt) 
+AN = analytical(X0, Y0, U0, V0, RK_test[-1])
 
-
+print(RK_test[4], "analytical: ", AN[-1], "difference: ", AN[-1]-RK_test[4])
 
 #RK   
 plt.figure()
 plt.title("Position numerical")
-plt.plot(RK[0], RK[1], color = "darkblue", label = "Projectile path RK")
+plt.plot(RK_test[0], RK_test[1], color = "darkblue", label = "Projectile path RK")
 plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
 #plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
 plt.legend(loc = 4)
 plt.xlabel(r"$x$ [m]")
 plt.ylabel(r"$y$ [m]")
+plt.axis([49940,49960,0,10])
 #"plt.axis("equal")
 plt.grid()
 #plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
 plt.show()
-
-#ENERGY
-fig = plt.figure(figsize=(8, 2))
-plt.title("Energy as a function of time")
-plt.plot(RK[-1], RK[4]/1000, label= "Total energy", color = "crimson")
-plt.plot(RK[-1], RK[5]/1000, label = "Kinetic energy", color = "blue")
-plt.plot(RK[-1], RK[6]/1000, label= "Potential energy", color = "orange")
-plt.xlabel(r"time [s]")
-plt.ylabel(r"$Etot$ [kJ / kg]")
-plt.legend(loc = 4)
-plt.grid()
-#plt.savefig("/Users/elveb/Documents/1_Ep.pdf")
-plt.show()
-
-#ENERGY
-fig = plt.figure(figsize=(8, 2))
-plt.title("Energy as a function of time")
-plt.plot(RK[-1], RK[4]/1000, label= "Total energy", color = "crimson")
-plt.xlabel(r"time [s]")
-plt.ylabel(r"$Etot$ [kJ / kg]")
-plt.legend(loc = 4)
-plt.grid()
-#plt.savefig("/Users/elveb/Documents/1_Ep.pdf")
-plt.show()
-
+#==============================================================================
+# 
+# #ENERGY
+# fig = plt.figure(figsize=(8, 2))
+# plt.title("Energy as a function of time")
+# plt.plot(RK[-1], RK[4]/1000, label= "Total energy", color = "crimson")
+# plt.plot(RK[-1], RK[5]/1000, label = "Kinetic energy", color = "blue")
+# plt.plot(RK[-1], RK[6]/1000, label= "Potential energy", color = "orange")
+# plt.xlabel(r"time [s]")
+# plt.ylabel(r"$Etot$ [kJ / kg]")
+# plt.legend(loc = 4)
+# plt.grid()
+# #plt.savefig("/Users/elveb/Documents/1_Ep.pdf")
+# plt.show()
+# 
+# #ENERGY
+# fig = plt.figure(figsize=(8, 2))
+# plt.title("Energy as a function of time")
+# plt.plot(RK[-1], RK[4]/1000, label= "Total energy", color = "crimson")
+# plt.xlabel(r"time [s]")
+# plt.ylabel(r"$Etot$ [kJ / kg]")
+# plt.legend(loc = 4)
+# plt.grid()
+# #plt.savefig("/Users/elveb/Documents/1_Ep.pdf")
+# plt.show()
+# 
+#==============================================================================
 #Velocity numerical
 #plt.figure()
 #plt.title("Velocity")
