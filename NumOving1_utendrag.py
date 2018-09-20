@@ -16,7 +16,7 @@ print(U0," ",V0)
 
 t_min = 0
 t_max = 102
-dt = 0.01             #time step / tau
+dt = 0.1             #time step / tau
 N = int(t_max/dt)
 
 
@@ -42,12 +42,18 @@ def RK(X0, Y0, U0, V0, t_min, t_max, tau):
     Y_RK = np.zeros(N_RK)   #Position y
     U_RK = np.zeros(N_RK)   #Velocity x
     V_RK = np.zeros(N_RK)   #Velocity y
+    E_RK = np.zeros(N_RK)   #Total energy/mass
+    Ek_RK = np.zeros(N_RK)  #Kinetic energy
+    Ep_RK = np.zeros(N_RK)  #Potential energy
 
     
     X_RK[0] = X0
     Y_RK[0] = Y0
     U_RK[0] = U0
     V_RK[0] = V0
+    Ek_RK[0] = 0.5 * np.sqrt(U_RK[0]**2 + V_RK[0]**2)**2
+    Ep_RK[0] = 0
+    E_RK[0] = Ek_RK[0] + Ep_RK[0]
 
     
     for n in range(N_RK-1):
@@ -75,9 +81,13 @@ def RK(X0, Y0, U0, V0, t_min, t_max, tau):
         Y_RK[n+1] = Y_RK[n] + k_y1/6 + k_y2/3 + k_y3/3 + k_y4/6
         U_RK[n+1] = U_RK[n] + k_u1/6 + k_u2/3 + k_u3/3 + k_u4/6
         V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
+
+        Ek_RK[n+1] = 0.5 * np.sqrt(U_RK[n+1]**2 + V_RK[n+1]**2)**2
+        Ep_RK[n+1] = -C*Y_RK[n+1]
+        E_RK[n+1] = Ek_RK[n+1] + Ep_RK[n+1]
         
     
-    return X_RK, Y_RK, U_RK, V_RK, t_RK
+    return X_RK, Y_RK, U_RK, V_RK, E_RK, Ek_RK, Ep_RK, t_RK
 
 
 #analytical solution
@@ -88,14 +98,13 @@ def analytical(X0, Y0, U0, V0, times):
     for i in range(0, len(times)):
         Y_A[i] = -0.5*g*times[i]**2 + times[i]*V0 + Y0
         X_A[i] = V0*times[i] + X0
-        
     return X_A, Y_A
    
 
 ###code to run
      
 RK = RK(X0, Y0, U0, V0, t_min, t_max, dt) 
-AN = analytical(X0, Y0, U0, V0, RK[4])
+AN = analytical(X0, Y0, U0, V0, RK[-1])
 
 
 
@@ -111,6 +120,30 @@ plt.ylabel(r"$y$ [m]")
 #"plt.axis("equal")
 plt.grid()
 #plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
+plt.show()
+
+#ENERGY
+fig = plt.figure(figsize=(8, 2))
+plt.title("Energy as a function of time")
+plt.plot(RK[-1], RK[4]/1000, label= "Total energy", color = "crimson")
+plt.plot(RK[-1], RK[5]/1000, label = "Kinetic energy", color = "blue")
+plt.plot(RK[-1], RK[6]/1000, label= "Potential energy", color = "orange")
+plt.xlabel(r"time [s]")
+plt.ylabel(r"$Etot$ [kJ / kg]")
+plt.legend(loc = 4)
+plt.grid()
+#plt.savefig("/Users/elveb/Documents/1_Ep.pdf")
+plt.show()
+
+#ENERGY
+fig = plt.figure(figsize=(8, 2))
+plt.title("Energy as a function of time")
+plt.plot(RK[-1], RK[4]/1000, label= "Total energy", color = "crimson")
+plt.xlabel(r"time [s]")
+plt.ylabel(r"$Etot$ [kJ / kg]")
+plt.legend(loc = 4)
+plt.grid()
+#plt.savefig("/Users/elveb/Documents/1_Ep.pdf")
 plt.show()
 
 #Velocity numerical
