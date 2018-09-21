@@ -11,12 +11,16 @@ import matplotlib.pyplot as plt
 
 #eneste endring fra adiabatic er V_start
 
-g = 9.81
+g = 9.81 #m/s^2
 C = -g
-B_2 = 4*10**(-5) #B_2/m
-a = 6.5 * 10**(-3)
-alpha = 2.5 #hva vil 2.5 (air) si?? 
-T_0 = 288.15 #tilsvarer 15 grader celsius
+m1 = 50 #kg
+m2 =  106 #kg
+B2_m1 = 4*10**(-5) #m^-1
+B2_m2 = (B2_m1 * m1 )/ m2 #m^-1
+
+a = 6.5 * 10**(-3) #K/m
+alpha = 2.5 #air 
+T_0 = 288.15 #K (tilsvarer 15 grader celcius)
 
 
 
@@ -30,7 +34,7 @@ V0 = V_start*np.sin(theta)
 print(U0," ",V0)
 
 t_min = 0
-t_max = 160
+t_max = 200
 dt = 0.1             #time step / tau
 N = int(t_max/dt)
 
@@ -45,12 +49,12 @@ def G(X_, Y_, U_, V_):          #dY/dt
 def H(X_, Y_, U_, V_):          #dU/dt
     V = (U_**2+V_**2)**(1/2)
     AD = (1 - ((a*Y_)/T_0))**alpha #airdensity adiabatic
-    return -B_2*AD*U_*V
+    return -B2_m2*AD*U_*V
 
 def I(X_, Y_, U_, V_):          #dV/dt
     V = (U_**2+V_**2)**(1/2)
     AD = (1 - ((a*Y_)/T_0))**alpha #airdensity adiabatic
-    return C - B_2*AD*V_*V
+    return C - B2_m2*AD*V_*V
 
 def RK(X0, Y0, U0, V0, t_min, t_max, tau):    
     dt_RK = tau
@@ -137,7 +141,7 @@ plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
 plt.legend()
 plt.xlabel(r"$x$ [m]")
 plt.ylabel(r"$y$ [m]")
-plt.axis([0,80000,0,40000])
+plt.axis([0,150000,0,40000])
 plt.grid()
 #plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
 plt.show()

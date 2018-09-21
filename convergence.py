@@ -128,15 +128,16 @@ def analytical(X0, Y0, U0, V0, times):
    
 
 ###code to run
-timesteps = np.linspace(0.001,0.1,50)
+timesteps = np.linspace(0.001,1,50)
 positions = np.zeros(len(timesteps))
 for i in range (len(timesteps)):
     dt = timesteps[i]
     print(i, " ",dt )
     RK_test = RK(X0, Y0, U0, V0, t_min, t_max, dt) 
-    AN = analytical(X0, Y0, U0, V0, RK_test[-1])
-    print(RK_test[4], "analytical: ", AN[4], "difference: ", AN[4]-RK_test[4], "tolerance: ", dt*AN[2][-1])
-    positions[i] = abs(RK_test[4]-AN[4])
+    x_hit=2*V0*U0/g
+    #AN = analytical(X0, Y0, U0, V0, RK_test[-1])
+    print(RK_test[4], "analytical: ",x_hit , "difference: ", x_hit-RK_test[4])
+    positions[i] = abs(RK_test[4]-x_hit)
     #print("time: ", RK_test[-1][-1], " y-position: ", RK_test[1][-1], " and ", AN[1][-1])
     
 #fig = plt.figure(figsize=(8, 2))
