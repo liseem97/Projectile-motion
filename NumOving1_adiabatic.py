@@ -29,7 +29,7 @@ V_start = 700
 
 t_min = 0
 t_max = 200
-dt = 0.01             #time step / tau
+dt = 0.1             #time step / tau
 N = int(t_max/dt)
 
 
@@ -114,7 +114,7 @@ def RK(X0, Y0, U0, V0, t_min, t_max, tau, theta):
    
 
 ###code to run
-thetas = np.linspace(0, 90, 200)
+thetas = np.linspace(42, 48, 400)
 ranges = np.zeros(len(thetas))
 bestRange = 0;
 bestTheta = 0;
@@ -145,31 +145,31 @@ print("Landingpoint: ", RK_info[4], "m ")
 #Best theta = 43.8693467337
 
 #RK   
-plt.figure()
-plt.title("Projectile motion in adiabatic atmosphere")
-plt.plot(RK_info[0], RK_info[1], color = "darkblue", label = "Projectile path RK")
-#plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
-plt.plot(RK_info[4], [0], color = "darkorange", marker = "o", markersize = 5)
-plt.legend(loc = 4)
-plt.xlabel(r"$x$ [m]")
-plt.ylabel(r"$y$ [m]")
-plt.axis([0,30000,0,15000])
-plt.grid()
-#plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
-plt.show()
-
-plt.figure()
-plt.title("Range as function of angle")
-plt.plot(thetas, ranges, color = "darkblue", label = "Range")
-plt.plot(bestTheta, bestRange, color = "darkorange", marker = "o", markersize = 5, label = "best theta")
-#plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
-plt.legend(loc = 4)
-plt.xlabel(r"$x$ [radians]")
-plt.ylabel(r"$y$ [m]")
-plt.axis([0,90,0,30000])
-plt.grid()
-#plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
-plt.show()
+#plt.figure()
+#plt.title("Projectile path in adiabatic atmosphere")
+#plt.plot(RK_info[0]/1000, RK_info[1]/1000, color = "darkblue")
+##plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+##plt.plot(RK_info[4], [0], color = "darkorange", marker = "o", markersize = 5)
+#plt.legend()
+#plt.xlabel(r"$x$ [km]")
+#plt.ylabel(r"$y$ [km]")
+#plt.axis([0,25,0,8])
+#plt.grid()
+#plt.savefig("adiabaticpath.pdf")
+#plt.show()
+#
+#plt.figure()
+#plt.title("Projectile range as function of angle in adiabatic atmosphere")
+#plt.plot(thetas, ranges/1000, color = "darkblue")
+##plt.plot(bestTheta, bestRange, color = "darkorange", marker = "o", markersize = 5, label = "best theta")
+##plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+#plt.legend()
+#plt.xlabel(r"$\Theta$ [degrees]")
+#plt.ylabel(r"$x_L$ [km]")
+#plt.axis([0,90,0,30])
+#plt.grid()
+#plt.savefig("adiabaticangle.pdf")
+#plt.show()
 
 
 #plt.figure()

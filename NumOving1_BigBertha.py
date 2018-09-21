@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 g = 9.81 #m/s^2
 C = -g
 m1 = 50 #kg
-m2 =  106 #kg
+m2 =  820 #106 #kg
 B2_m1 = 4*10**(-5) #m^-1
 B2_m2 = (B2_m1 * m1 )/ m2 #m^-1
 
@@ -27,8 +27,8 @@ T_0 = 288.15 #K (tilsvarer 15 grader celcius)
 #Initial conditions
 X0 = 0
 Y0 = 0
-theta = np.deg2rad(43.7688442211) #Har samme som adiabatisk modell
-V_start = 1640
+theta = np.deg2rad(43.75) #Har samme som adiabatisk modell
+V_start = 400 #1640
 U0 = V_start*np.cos(theta)
 V0 = V_start*np.sin(theta)
 print(U0," ",V0)
@@ -134,16 +134,28 @@ print("Best height: ", y_best , "m ")
 
 #RK   
 plt.figure()
-plt.title("Position")
-plt.plot(RK[0], RK[1], color = "darkblue", label = "Projectile path RK")
+plt.title("Projectile path of Big Bertha")
+plt.plot(RK[0]/1000, RK[1]/1000, color = "darkblue")
 #plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
-plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
+#plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
 plt.legend()
-plt.xlabel(r"$x$ [m]")
-plt.ylabel(r"$y$ [m]")
-plt.axis([0,150000,0,40000])
+plt.xlabel(r"$x$ [km]")
+plt.ylabel(r"$y$ [km]")
+#plt.axis([0,150,0,40])
 plt.grid()
-#plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
+#plt.savefig("pathBB.pdf")
+plt.show()
+
+plt.figure()
+plt.title("Projectile height as function of time")
+plt.plot(RK[5], RK[1]/1000, color = "darkblue")
+#plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+plt.legend()
+plt.xlabel(r"$time$ [s]")
+plt.ylabel(r"$y$ [km]")
+#plt.axis([0,180,0,40])
+plt.grid()
+#plt.savefig("heighttimeBB.pdf")
 plt.show()
 
 #plt.figure()

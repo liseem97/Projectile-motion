@@ -116,21 +116,20 @@ def analytical(X0, Y0, U0, V0, times):
 RK_test = RK(X0, Y0, U0, V0, t_min, t_max, dt) 
 AN = analytical(X0, Y0, U0, V0, RK_test[-1])
 
-print(RK_test[4], "analytical: ", AN[-1], "difference: ", AN[-1]-RK_test[4])
 
 #RK   
 plt.figure()
-plt.title("Position numerical")
-plt.plot(RK_test[0], RK_test[1], color = "darkblue", label = "Projectile path RK")
-plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+plt.title("Projectile path")
+plt.plot(RK_test[0]/1000, RK_test[1]/1000, color = "darkblue", label = "Numerical solution")
+plt.plot(AN[0]/1000, AN[1]/1000, color = "red", label = "Analytical solution")
 #plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
-plt.legend(loc = 4)
-plt.xlabel(r"$x$ [m]")
-plt.ylabel(r"$y$ [m]")
-plt.axis([49940,49960,0,10])
+plt.legend()
+plt.xlabel(r"$x$ [km]")
+plt.ylabel(r"$y$ [km]")
+plt.axis([0,55,0,15])
 #"plt.axis("equal")
 plt.grid()
-#plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
+plt.savefig("projectilepath.pdf")
 plt.show()
 #==============================================================================
 # 
