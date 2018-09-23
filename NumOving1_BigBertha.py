@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 g = 9.81 #m/s^2
 C = -g
 m1 = 50 #kg
-m2 =  820 #106 #kg
+m2 =  106 #kg
 B2_m1 = 4*10**(-5) #m^-1
 B2_m2 = (B2_m1 * m1 )/ m2 #m^-1
 
@@ -28,7 +28,7 @@ T_0 = 288.15 #K (tilsvarer 15 grader celcius)
 X0 = 0
 Y0 = 0
 theta = np.deg2rad(43.75) #Har samme som adiabatisk modell
-V_start = 400 #1640
+V_start = 1640
 U0 = V_start*np.cos(theta)
 V0 = V_start*np.sin(theta)
 print(U0," ",V0)
@@ -140,8 +140,8 @@ plt.plot(RK[0]/1000, RK[1]/1000, color = "darkblue")
 #plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
 plt.legend()
 plt.xlabel(r"$x$ [km]")
-plt.ylabel(r"$y$ [km]")
-#plt.axis([0,150,0,40])
+plt.ylabel(r"$z$ [km]")
+plt.axis([0,150,0,40])
 plt.grid()
 #plt.savefig("pathBB.pdf")
 plt.show()
@@ -152,8 +152,8 @@ plt.plot(RK[5], RK[1]/1000, color = "darkblue")
 #plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
 plt.legend()
 plt.xlabel(r"$time$ [s]")
-plt.ylabel(r"$y$ [km]")
-#plt.axis([0,180,0,40])
+plt.ylabel(r"$z$ [km]")
+plt.axis([0,180,0,40])
 plt.grid()
 #plt.savefig("heighttimeBB.pdf")
 plt.show()
