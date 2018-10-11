@@ -54,15 +54,24 @@ Lp = np.sqrt(Xp**2+Yp**2+Zp**2)
 
 beta = np.arccos((Xc*Xp+Yc*Yp+Zc*Zp)/(Lc*Lp)) 
 d = beta * R
-print("Distance between places: ", d/1000 )
 
-theta = beta/2+np.pi/2 #Har samme som adiabatisk modell
-phi = np.deg2rad(40)
+angle = np.arctan((Yc-Yp)/(Xc-Xp))
+print("Distance between places: ", d/1000, "angle between places: ", angle )
+
+theta = -np.pi#angle #2*np.pi-np.pi/2-angle
+phi = np.deg2rad(50)
+
+Lc=np.sqrt(Xc**2+Yc**2+Zc**2)
+Lp = np.sqrt(Xp**2+Yp**2+Zp**2)
+theta = np.arccos(Zc/Lc)
+phi = np.arccos(Xc*Xp/(np.sin(theta)*Lp*Lc))
+
+print(theta/(2*np.pi)*360, phi/(2*np.pi)*360)
 
 V_start = 1640
-U0 = V_start*np.cos(theta)*np.sin(phi)
-V0 = V_start*np.sin(theta)*np.sin(phi)
-W0 = V_start*np.cos(phi)
+U0 = V_start*np.sin(theta-np.pi/4)*np.cos(phi)
+V0 = V_start*np.sin(theta-np.pi/4)*np.sin(phi)
+W0 = V_start*np.cos(theta)
 
 print("starting velocity: ", U0, V0, W0, " velocity: ", np.sqrt(U0**2+V0**2+W0**2))
 
@@ -70,7 +79,7 @@ print("Starting position: ", np.sqrt(Xc**2+Yc**2+Zc**2))
 
 
 t_min = 0
-t_max = 4000
+t_max = 500
 dt = 0.1             #time step / tau
 N = int(t_max/dt)
 
@@ -86,22 +95,38 @@ def G(X_,Y_,Z_,U_,V_,W_):           #dZ/dt
     return W_
 
 def H(X_,Y_,Z_,U_,V_,W_):          #dU/dt
+    L=np.sqrt(X_**2+Y_**2+Z_**2)
+    Theta = np.arccos(Z_/L)
+    Phi = np.arccos(X_/(np.sin(Theta)*L))
     V = (U_**2+V_**2+W_**2)**(1/2)
-    h=np.sqrt(X_**2+Y_**2+Z_**2)-R
+    h=L-R
     AD = (1 -((a*h)/T_0))**alpha #airdensity adiabatic
-    return C -B2_m2*U_*V*AD
+    G = C*np.sin(Theta)*np.cos(Phi)
+    #print(G)
+    return G -B2_m2*U_*V*AD
 
 def I(X_,Y_,Z_,U_,V_,W_):          #dV/dt
+    L=np.sqrt(X_**2+Y_**2+Z_**2)
+    Theta = np.arccos(Z_/L)
+    Phi = np.arccos(X_/(np.sin(Theta)*L))
     V = (U_**2+V_**2+W_**2)**(1/2)
     h=np.sqrt(X_**2+Y_**2+Z_**2)-R
     AD = (1 - ((a*h)/T_0))**alpha #airdensity adiabatic
-    return C -B2_m2*V_*V*AD
-
+    G=C*np.sin(Theta)*np.sin(Phi)
+    #print(G)
+    return G -B2_m2*V_*V*AD
+    
 def J(X_,Y_,Z_,U_,V_,W_):           #dW/dt
+    L=np.sqrt(X_**2+Y_**2+Z_**2)
+    #print(Z_/L)
+    Theta = np.arccos(Z_/L)
+    #Phi = np.arccos(X_/np.sin(Theta)*L)
     V = (U_**2+V_**2+W_**2)**(1/2)
     h=np.sqrt(X_**2+Y_**2+Z_**2)-R
     AD = (1 - ((a*h)/T_0))**alpha
-    return C -B2_m2*W_*V*AD
+    G = C*np.cos(Theta)
+    #print(G)
+    return G-B2_m2*W_*V*AD
 
 def RK(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):  
     dt_RK = tau
@@ -194,7 +219,7 @@ def RK(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
      
 RK = RK(Xc, Yc, Zc, U0, V0, W0, t_min, t_max, dt) 
 
-print("landing position", RK[6]/1000,RK[7]/1000, " last position", RK[0][1], RK[1][1])
+print("landing position", RK[6]/1000,RK[7]/1000, " last position", RK[0][-1]/1000, RK[1][-1]/1000, RK[2][-1]/1000)
 #AN = analytical(X0, Y0, U0, V0, RK[5])
 
 #y_best = np.amax(RK[1])
@@ -224,20 +249,21 @@ ax.legend()
 plt.show()
 
 
-##RK   
-#plt.figure()
-#plt.title("Projectile path of Paris Gun")
-#plt.plot(RK[0]/1000, RK[1]/1000, color = "darkblue")
-##plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
-##plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
-#plt.legend()
-#plt.xlabel(r"$x$ [km]")
-#plt.ylabel(r"$z$ [km]")
+  
+plt.figure()
+plt.title("Projectile path of Paris Gun")
+plt.plot(RK[0]/1000, RK[2]/1000, color = "darkblue")
+#plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+#plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
+plt.legend()
+plt.xlabel(r"$x$ [km]")
+plt.ylabel(r"$z$ [km]")
 #plt.axis([0,150,0,40])
-#plt.grid()
+plt.grid()
 #plt.savefig("pathBB.pdf")
-#plt.show()
-#
+plt.show()
+
+
 #plt.figure()
 #plt.title("Projectile height as function of time")
 #plt.plot(RK[5], RK[1]/1000, color = "darkblue")
