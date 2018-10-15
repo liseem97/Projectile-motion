@@ -12,8 +12,8 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 
-g = 9.81 #m/s^2
-C = -g
+g = -9.81 #m/s^2
+#C = -g
 m1 = 50 #kg
 m2 =  106 #kg
 B2_m1 = 4*10**(-5) #m^-1
@@ -28,6 +28,7 @@ T_0 = 288.15 #K (tilsvarer 15 grader celcius)
 #Initial conditions
 #Earth
 R = 6371*10**3
+omega = 7.29*10**(-5)
 
 #Crépy
 Nc = np.deg2rad(49.60500)
@@ -55,23 +56,23 @@ Lp = np.sqrt(Xp**2+Yp**2+Zp**2)
 beta = np.arccos((Xc*Xp+Yc*Yp+Zc*Zp)/(Lc*Lp)) 
 d = beta * R
 
-angle = np.arctan((Yc-Yp)/(Xc-Xp))
-print("Distance between places: ", d/1000, "angle between places: ", angle )
+print("Distance between places: ", d/1000)
 
-theta = -np.pi#angle #2*np.pi-np.pi/2-angle
-phi = np.deg2rad(50)
+bvec=np.array([Xp-Xc,Yp-Yc,Zp-Zc]/np.sqrt((Xp-Xc)**2+(Yp-Yc)**2+(Zp-Zc)**2))
 
-Lc=np.sqrt(Xc**2+Yc**2+Zc**2)
-Lp = np.sqrt(Xp**2+Yp**2+Zp**2)
 theta = np.arccos(Zc/Lc)
-phi = np.arccos(Xc*Xp/(np.sin(theta)*Lp*Lc))
-
-print(theta/(2*np.pi)*360, phi/(2*np.pi)*360)
+phi = np.arccos(Xc/(np.sin(theta)*Lc))
+gamma = 0.99 # 0.99 er bra
+rvec=np.array([(np.sin(theta)*np.cos(phi)),(np.sin(theta)*np.sin(phi)),(np.cos(theta))])
+#print(np.sqrt(np.dot(rvec+bvec,rvec+bvec)))
+shootvec1=(bvec+rvec*gamma)
+shootvec2=shootvec1/np.sqrt(np.dot(shootvec1,shootvec1))
+print("length of shooting vector", np.sqrt(np.dot(shootvec2,shootvec2)))
 
 V_start = 1640
-U0 = V_start*np.sin(theta-np.pi/4)*np.cos(phi)
-V0 = V_start*np.sin(theta-np.pi/4)*np.sin(phi)
-W0 = V_start*np.cos(theta)
+U0 = V_start*shootvec2[0]
+V0 = V_start*shootvec2[1]
+W0 = V_start*shootvec2[2]
 
 print("starting velocity: ", U0, V0, W0, " velocity: ", np.sqrt(U0**2+V0**2+W0**2))
 
@@ -79,7 +80,7 @@ print("Starting position: ", np.sqrt(Xc**2+Yc**2+Zc**2))
 
 
 t_min = 0
-t_max = 500
+t_max = 600
 dt = 0.1             #time step / tau
 N = int(t_max/dt)
 
@@ -101,9 +102,10 @@ def H(X_,Y_,Z_,U_,V_,W_):          #dU/dt
     V = (U_**2+V_**2+W_**2)**(1/2)
     h=L-R
     AD = (1 -((a*h)/T_0))**alpha #airdensity adiabatic
-    G = C*np.sin(Theta)*np.cos(Phi)
+    G = g*np.sin(Theta)*np.cos(Phi)
+    C=2*V_*omega
     #print(G)
-    return G -B2_m2*U_*V*AD
+    return G -B2_m2*U_*V*AD+C
 
 def I(X_,Y_,Z_,U_,V_,W_):          #dV/dt
     L=np.sqrt(X_**2+Y_**2+Z_**2)
@@ -112,9 +114,10 @@ def I(X_,Y_,Z_,U_,V_,W_):          #dV/dt
     V = (U_**2+V_**2+W_**2)**(1/2)
     h=np.sqrt(X_**2+Y_**2+Z_**2)-R
     AD = (1 - ((a*h)/T_0))**alpha #airdensity adiabatic
-    G=C*np.sin(Theta)*np.sin(Phi)
+    G=g*np.sin(Theta)*np.sin(Phi)
+    C=-2*U_*omega
     #print(G)
-    return G -B2_m2*V_*V*AD
+    return G -B2_m2*V_*V*AD+C
     
 def J(X_,Y_,Z_,U_,V_,W_):           #dW/dt
     L=np.sqrt(X_**2+Y_**2+Z_**2)
@@ -124,7 +127,7 @@ def J(X_,Y_,Z_,U_,V_,W_):           #dW/dt
     V = (U_**2+V_**2+W_**2)**(1/2)
     h=np.sqrt(X_**2+Y_**2+Z_**2)-R
     AD = (1 - ((a*h)/T_0))**alpha
-    G = C*np.cos(Theta)
+    G = g*np.cos(Theta)
     #print(G)
     return G-B2_m2*W_*V*AD
 
@@ -135,6 +138,7 @@ def RK(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
     x_l=0
     y_l=0
     t_l=0
+    index=0
     
     X_RK = np.zeros(N_RK)   #Position x
     Y_RK = np.zeros(N_RK)   #Position y
@@ -192,13 +196,17 @@ def RK(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
         
         
         if np.sqrt(X_RK[n+1]**2+Y_RK[n+1]**2+Z_RK[n+1]**2) < R and np.sqrt(X_RK[n]**2+Y_RK[n]**2+Z_RK[n]**2) > R:
-            r = - np.sqrt(X_RK[n]**2+Y_RK[n]**2+Z_RK[n]**2) / np.sqrt(X_RK[n+1]**2+Y_RK[n+1]**2+Z_RK[n+1]**2)
+            print("HIT GROUND")
+            r = abs(- np.sqrt(X_RK[n]**2+Y_RK[n]**2+Z_RK[n]**2) / np.sqrt(X_RK[n+1]**2+Y_RK[n+1]**2+Z_RK[n+1]**2))
+            print("r ", r)
             x_l = (X_RK[n] + r*X_RK[n+1])/(r + 1)
             y_l = (Y_RK[n] + r*Y_RK[n+1])/(r + 1)
+            z_l = (Z_RK[n] + r*Z_RK[n+1])/(r + 1)
             t_l = (t_RK[n] + t_RK[n+1])/2
+            index = n
         
     
-    return X_RK, Y_RK, Z_RK, U_RK, V_RK, W_RK, x_l, y_l, t_RK, t_l
+    return X_RK, Y_RK, Z_RK, U_RK, V_RK, W_RK, x_l, y_l, z_l, t_RK, t_l, index
 
 
 #analytical solution OBS DENNE ER UTEN DRAG OG LUFTFUKTIGHET
@@ -219,7 +227,14 @@ def RK(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
      
 RK = RK(Xc, Yc, Zc, U0, V0, W0, t_min, t_max, dt) 
 
-print("landing position", RK[6]/1000,RK[7]/1000, " last position", RK[0][-1]/1000, RK[1][-1]/1000, RK[2][-1]/1000)
+if RK[-1] != 0:
+    xlist = RK[0][0:RK[-1]]
+    ylist = RK[1][0:RK[-1]]
+    zlist = RK[2][0:RK[-1]]
+    
+
+print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndifference: ", (RK[6]-Xp)/1000,(RK[7]-Yp)/1000,(RK[8]-Zp)/1000)
+print("landing position interpolated ",RK[6]/1000,RK[7]/1000,RK[8]/1000)
 #AN = analytical(X0, Y0, U0, V0, RK[5])
 
 #y_best = np.amax(RK[1])
@@ -239,7 +254,8 @@ z = R * np.outer(np.ones(np.size(u)), np.cos(v))
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
-ax.plot3D(RK[0]/1000, RK[1]/1000, RK[2]/1000, label='path')
+#ax.plot3D(RK[0]/1000, RK[1]/1000, RK[2]/1000, label='path')
+ax.plot3D(xlist/1000, ylist/1000, zlist/1000, label='path')
 #ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='green')
 ax.scatter3D(Xc/1000,Yc/1000,Zc/1000, color = "darkorange", marker = "o")
 ax.scatter3D(Xp/1000,Yp/1000,Zp/1000, color = "red", marker = "o")
@@ -250,18 +266,18 @@ plt.show()
 
 
   
-plt.figure()
-plt.title("Projectile path of Paris Gun")
-plt.plot(RK[0]/1000, RK[2]/1000, color = "darkblue")
-#plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
-#plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
-plt.legend()
-plt.xlabel(r"$x$ [km]")
-plt.ylabel(r"$z$ [km]")
-#plt.axis([0,150,0,40])
-plt.grid()
-#plt.savefig("pathBB.pdf")
-plt.show()
+#plt.figure()
+#plt.title("Projectile path of Paris Gun")
+#plt.plot(RK[0]/1000, RK[2]/1000, color = "darkblue")
+##plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
+##plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
+#plt.legend()
+#plt.xlabel(r"$x$ [km]")
+#plt.ylabel(r"$z$ [km]")
+##plt.axis([0,150,0,40])
+#plt.grid()
+##plt.savefig("pathBB.pdf")
+#plt.show()
 
 
 #plt.figure()
