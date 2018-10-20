@@ -10,10 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-
-
 g = -9.81 #m/s^2
-#C = -g
 m1 = 50 #kg
 m2 =  106 #kg
 B2_m1 = 4*10**(-5) #m^-1
@@ -24,65 +21,70 @@ alpha = 2.5 #air
 T_0 = 288.15 #K (tilsvarer 15 grader celcius)
 
 
-
 #Initial conditions
 #Earth
-R = 6371*10**3
-omega = 7.29*10**(-5)
+R = 6371*10**3 #m 
+omega = 7.29*10**(-5) #s^-1
 
+def sphCoor(Z, X, L):
+    theta = np.arccos(Z/L)
+    phi = np.arccos(X/(np.sin(theta)*L))
+    CartCoor= np.array([ np.sin(theta)*np.cos(phi), np.sin(theta)*np.sin(phi), np.cos(theta)])
+    return CartCoor
+
+def lenVec(vec1, vec2):
+    return np.sqrt(np.dot(vec1,vec2))
+
+def lenCoor(X,Y,Z):
+    return np.sqrt(X**2+Y**2+Z**2)
+    
 #Crépy
 Nc = np.deg2rad(49.60500)
 Ec = np.deg2rad(3.514722)
+Crepy = np.array([R*np.cos(Nc)*np.cos(Ec), R*np.cos(Nc)*np.sin(Ec), R*np.sin(Nc)])
 
-Xc = R*np.cos(Nc)*np.cos(Ec)
-Yc = R*np.cos(Nc)*np.sin(Ec)
-Zc = R*np.sin(Nc)
+print("Crepy: ", Crepy[0]/1000, Crepy[1]/1000, Crepy[2]/1000)
 
-print("Crepy: ", Xc/1000, Yc/1000, Zc/1000)
-Lc= np.sqrt(Xc**2+Yc**2+Zc**2)
 
 #Paris
 Np = np.deg2rad(48.5667)
 Ep = np.deg2rad(2.35083)
+Paris = np.array([R*np.cos(Np)*np.cos(Ep), R*np.cos(Np)*np.sin(Ep), R*np.sin(Np)])
 
-Xp = R*np.cos(Np)*np.cos(Ep)
-Yp = R*np.cos(Np)*np.sin(Ep)
-Zp = R*np.sin(Np)
 
-print("Paris: ", Xp/1000, Yp/1000, Zp/1000)
+print("Paris: ", Paris[0]/1000, Paris[1]/1000, Paris[2]/1000)
 
-Lp = np.sqrt(Xp**2+Yp**2+Zp**2)
 
-beta = np.arccos((Xc*Xp+Yc*Yp+Zc*Zp)/(Lc*Lp)) 
+#Distance between Crepy and Paris 
+beta = np.arccos(np.dot(Paris,Crepy)/(lenVec(Paris,Paris)*lenVec(Crepy,Crepy)))
 d = beta * R
-
 print("Distance between places: ", d/1000)
 
-bvec=np.array([Xp-Xc,Yp-Yc,Zp-Zc]/np.sqrt((Xp-Xc)**2+(Yp-Yc)**2+(Zp-Zc)**2))
+bvec = (Paris - Crepy) / lenVec(Paris-Crepy,Paris-Crepy)
 
-theta = np.arccos(Zc/Lc)
-phi = np.arccos(Xc/(np.sin(theta)*Lc))
 gamma = 0.99 # 0.99 er bra
-rvec=np.array([(np.sin(theta)*np.cos(phi)),(np.sin(theta)*np.sin(phi)),(np.cos(theta))])
-#print(np.sqrt(np.dot(rvec+bvec,rvec+bvec)))
-shootvec1=(bvec+rvec*gamma)
-shootvec2=shootvec1/np.sqrt(np.dot(shootvec1,shootvec1))
-print("length of shooting vector", np.sqrt(np.dot(shootvec2,shootvec2)))
+rvec = sphCoor(Crepy[2],Crepy[0], lenVec(Crepy,Crepy))
+
+
+direction=(bvec+rvec*gamma)
+shootvec= direction/lenVec(direction,direction)
+
+
+print("length of shooting vector", lenVec(shootvec,shootvec))
 
 V_start = 1640
-U0 = V_start*shootvec2[0]
-V0 = V_start*shootvec2[1]
-W0 = V_start*shootvec2[2]
+V = V_start*shootvec
 
-print("starting velocity: ", U0, V0, W0, " velocity: ", np.sqrt(U0**2+V0**2+W0**2))
-
-print("Starting position: ", np.sqrt(Xc**2+Yc**2+Zc**2))
+print("starting velocity: ", V[0], V[1], V[2], " velocity: ", lenVec(V,V))
+print("Starting position: ", lenVec(Crepy,Crepy))
 
 
 t_min = 0
 t_max = 600
 dt = 0.1             #time step / tau
 N = int(t_max/dt)
+
+
 
 
 #RUNGE-KUTTA (4th order)
@@ -96,39 +98,33 @@ def G(X_,Y_,Z_,U_,V_,W_):           #dZ/dt
     return W_
 
 def H(X_,Y_,Z_,U_,V_,W_):          #dU/dt
-    L=np.sqrt(X_**2+Y_**2+Z_**2)
-    Theta = np.arccos(Z_/L)
-    Phi = np.arccos(X_/(np.sin(Theta)*L))
-    V = (U_**2+V_**2+W_**2)**(1/2)
-    h=L-R
+    L = lenCoor(X_,Y_,Z_)
+    V = lenCoor(U_,V_,W_)
+    h = L-R
     AD = (1 -((a*h)/T_0))**alpha #airdensity adiabatic
-    G = g*np.sin(Theta)*np.cos(Phi)
-    C=2*V_*omega
-    #print(G)
+    sph = sphCoor(Z_,X_,L)
+    G = g*sph[0]
+    C = 2*V_*omega
     return G -B2_m2*U_*V*AD+C
 
+
 def I(X_,Y_,Z_,U_,V_,W_):          #dV/dt
-    L=np.sqrt(X_**2+Y_**2+Z_**2)
-    Theta = np.arccos(Z_/L)
-    Phi = np.arccos(X_/(np.sin(Theta)*L))
-    V = (U_**2+V_**2+W_**2)**(1/2)
-    h=np.sqrt(X_**2+Y_**2+Z_**2)-R
+    L = lenCoor(X_,Y_,Z_)
+    V = lenCoor(U_,V_,W_)
+    h = L-R
     AD = (1 - ((a*h)/T_0))**alpha #airdensity adiabatic
-    G=g*np.sin(Theta)*np.sin(Phi)
+    sph = sphCoor(Z_,X_,L)
+    G = g*sph[1]
     C=-2*U_*omega
-    #print(G)
     return G -B2_m2*V_*V*AD+C
     
 def J(X_,Y_,Z_,U_,V_,W_):           #dW/dt
-    L=np.sqrt(X_**2+Y_**2+Z_**2)
-    #print(Z_/L)
-    Theta = np.arccos(Z_/L)
-    #Phi = np.arccos(X_/np.sin(Theta)*L)
-    V = (U_**2+V_**2+W_**2)**(1/2)
-    h=np.sqrt(X_**2+Y_**2+Z_**2)-R
+    L = lenCoor(X_,Y_,Z_)
+    V = lenCoor(U_,V_,W_)
+    h = L-R
     AD = (1 - ((a*h)/T_0))**alpha
-    G = g*np.cos(Theta)
-    #print(G)
+    sph = sphCoor(Z_,X_,L)
+    G = g*sph[2]
     return G-B2_m2*W_*V*AD
 
 def RK(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):  
@@ -194,10 +190,10 @@ def RK(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
         V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
         W_RK[n+1] = W_RK[n] + k_w1/6 + k_w2/3 + k_w3/3 + k_w4/6
         
-        
-        if np.sqrt(X_RK[n+1]**2+Y_RK[n+1]**2+Z_RK[n+1]**2) < R and np.sqrt(X_RK[n]**2+Y_RK[n]**2+Z_RK[n]**2) > R:
+                    
+        if lenCoor(X_RK[n+1],Y_RK[n+1],Z_RK[n+1]) < R and lenCoor(X_RK[n],Y_RK[n],Z_RK[n]) > R:
             print("HIT GROUND")
-            r = abs(- np.sqrt(X_RK[n]**2+Y_RK[n]**2+Z_RK[n]**2) / np.sqrt(X_RK[n+1]**2+Y_RK[n+1]**2+Z_RK[n+1]**2))
+            r = abs(- lenCoor(X_RK[n],Y_RK[n],Z_RK[n]) / lenCoor(X_RK[n+1],Y_RK[n+1],Z_RK[n+1]))
             print("r ", r)
             x_l = (X_RK[n] + r*X_RK[n+1])/(r + 1)
             y_l = (Y_RK[n] + r*Y_RK[n+1])/(r + 1)
@@ -209,23 +205,9 @@ def RK(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
     return X_RK, Y_RK, Z_RK, U_RK, V_RK, W_RK, x_l, y_l, z_l, t_RK, t_l, index
 
 
-#analytical solution OBS DENNE ER UTEN DRAG OG LUFTFUKTIGHET
-#def analytical(X0, Y0, U0, V0, times):
-#    X_A = np.zeros(len(times))
-#    Y_A = np.zeros(len(times))
-#    i = 0
-#    for i in range(0, len(times)):
-#        Y_A[i] = -0.5*g*times[i]**2 + times[i]*V0 + Y0
-#        X_A[i] = V0*times[i] + X0
-#        
-#    return X_A, Y_A
-   
 
 ###code to run
-    
-
-     
-RK = RK(Xc, Yc, Zc, U0, V0, W0, t_min, t_max, dt) 
+RK = RK(Crepy[0], Crepy[1], Crepy[2], V[0], V[1], V[2], t_min, t_max, dt) 
 
 if RK[-1] != 0:
     xlist = RK[0][0:RK[-1]]
@@ -233,16 +215,8 @@ if RK[-1] != 0:
     zlist = RK[2][0:RK[-1]]
     
 
-print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndifference: ", (RK[6]-Xp)/1000,(RK[7]-Yp)/1000,(RK[8]-Zp)/1000)
+print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndifference: ", (RK[6]-Paris[0])/1000,(RK[7]-Paris[1])/1000,(RK[8]-Paris[2])/1000)
 print("landing position interpolated ",RK[6]/1000,RK[7]/1000,RK[8]/1000)
-#AN = analytical(X0, Y0, U0, V0, RK[5])
-
-#y_best = np.amax(RK[1])
-#
-#
-#print("Landingpoint: ", RK[4], "m ")
-#print("Time of fligth: ", RK[6], "s ")
-#print("Best height: ", y_best , "m ")
 
 u = np.linspace(0, 2 * np.pi, 100)
 v = np.linspace(0, np.pi, 100)
@@ -250,58 +224,13 @@ x = R * np.outer(np.cos(u), np.sin(v))
 y = R * np.outer(np.sin(u), np.sin(v))
 z = R * np.outer(np.ones(np.size(u)), np.cos(v))
 
-
-
 fig = plt.figure()
 ax = fig.gca(projection='3d')
 #ax.plot3D(RK[0]/1000, RK[1]/1000, RK[2]/1000, label='path')
 ax.plot3D(xlist/1000, ylist/1000, zlist/1000, label='path')
 #ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='green')
-ax.scatter3D(Xc/1000,Yc/1000,Zc/1000, color = "darkorange", marker = "o")
-ax.scatter3D(Xp/1000,Yp/1000,Zp/1000, color = "red", marker = "o")
+ax.scatter3D(Crepy[0]/1000,Crepy[1]/1000,Crepy[2]/1000, color = "darkorange", marker = "o")
+ax.scatter3D(Paris[0]/1000,Paris[1]/1000,Paris[2]/1000, color = "red", marker = "o")
 #ax.scatter3D(RK[6]/1000,RK[7]/1000,R/1000, color = "green", marker = "o")
-#ax.axis([4100000,4150000, 250000,35000])
 ax.legend()
 plt.show()
-
-
-  
-#plt.figure()
-#plt.title("Projectile path of Paris Gun")
-#plt.plot(RK[0]/1000, RK[2]/1000, color = "darkblue")
-##plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
-##plt.plot(RK[4], [0], color = "darkorange", marker = "o", markersize = 5)
-#plt.legend()
-#plt.xlabel(r"$x$ [km]")
-#plt.ylabel(r"$z$ [km]")
-##plt.axis([0,150,0,40])
-#plt.grid()
-##plt.savefig("pathBB.pdf")
-#plt.show()
-
-
-#plt.figure()
-#plt.title("Projectile height as function of time")
-#plt.plot(RK[5], RK[1]/1000, color = "darkblue")
-##plt.plot(AN[0], AN[1], color = "red", label = "Analytical path")
-#plt.legend()
-#plt.xlabel(r"$time$ [s]")
-#plt.ylabel(r"$z$ [km]")
-#plt.axis([0,180,0,40])
-#plt.grid()
-#plt.savefig("heighttimeBB.pdf")
-#plt.show()
-#
-##plt.figure()
-##plt.title("Velocity")
-##plt.plot(RK[5], RK[2], color = "darkblue", label = "X-velocity")
-##plt.plot(RK[5], RK[3], color = "red", label = "Y-velocity")
-###plt.plot([0], [0], color = "darkorange", marker = "o", markersize = 19, label = "Fixed sun")
-##plt.legend(loc = 4)
-##plt.xlabel(r"$x$ [s]")
-##plt.ylabel(r"$y$ [m/s]")
-###plt.axis("equal")
-##plt.grid()
-###plt.savefig("/Users/elveb/Documents/1_RK_pos.pdf")
-##plt.show()
-#
