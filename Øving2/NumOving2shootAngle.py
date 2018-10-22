@@ -90,11 +90,7 @@ def H(X_,Y_,Z_,U_,V_,W_):          #dU/dt
     #print("air density stuff: ", h, L, R)
     central = centralVec(Z_,X_,L)
     G = g*central[0]
-    if trigger:
-        C = 2*V_*omega
-    else: 
-        C = 0
-#    C = 0 #2*V_*omega
+    C = 0 #2*V_*omega
     return G -B2_m2*U_*V*AD+C
 
 
@@ -107,11 +103,7 @@ def I(X_,Y_,Z_,U_,V_,W_):          #dV/dt
         AD = 0
     central = centralVec(Z_,X_,L)
     G = g*central[1]
-    if trigger:
-        C = -2*U_*omega
-    else: 
-        C = 0
-    #C= 0 #-2*U_*omega
+    C= 0 #-2*U_*omega
     return G -B2_m2*V_*V*AD+C
     
 def J(X_,Y_,Z_,U_,V_,W_):           #dW/dt
@@ -208,37 +200,45 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
 
 #gamma = 0.99 # 0.99 er bra
 
-gamma = 0.9851
+gamma = np.linspace(0.97,1,50)
 
+diffList = np.zeros(50)
+
+for i in range(len(gamma)): 
+    print("Gamma: ",gamma[i])
+    direction=(bvec+rvec*gamma[i])
+    shootvec= direction/lenVec(direction,direction)
     
-direction=(bvec+rvec*gamma)
-shootvec= direction/lenVec(direction,direction)
-
-#print("length of shooting vector", lenVec(shootvec,shootvec))
-
-V_start = 1640
-V = V_start*shootvec
-
-#print("starting velocity: ", V[0], V[1], V[2], " velocity: ", lenVec(V,V))
-#print("Starting position: ", lenVec(Crepy,Crepy))
-trigger = False
-RK = RKfunc(Crepy[0], Crepy[1], Crepy[2], V[0], V[1], V[2], t_min, t_max, dt) 
-trigger = True
-RKc = RKfunc(Crepy[0], Crepy[1], Crepy[2], V[0], V[1], V[2], t_min, t_max, dt) 
-
-
-if RK[-1] != 0:
-    xlist = RK[0][0:RK[-1]]
-    ylist = RK[1][0:RK[-1]]
-    zlist = RK[2][0:RK[-1]]
+    #print("length of shooting vector", lenVec(shootvec,shootvec))
     
-if RKc[-1] != 0:
-    xlistc = RKc[0][0:RKc[-1]]
-    ylistc = RKc[1][0:RKc[-1]]
-    zlistc = RKc[2][0:RKc[-1]]
- 
-print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndifference: ", (RK[6]-Paris[0])/1000,(RK[7]-Paris[1])/1000,(RK[8]-Paris[2])/1000)
+    V_start = 1640
+    V = V_start*shootvec
+    
+    #print("starting velocity: ", V[0], V[1], V[2], " velocity: ", lenVec(V,V))
+    #print("Starting position: ", lenVec(Crepy,Crepy))
 
+    RK = RKfunc(Crepy[0], Crepy[1], Crepy[2], V[0], V[1], V[2], t_min, t_max, dt) 
+    
+
+    if RK[-1] != 0:
+        xlist = RK[0][0:RK[-1]]
+        ylist = RK[1][0:RK[-1]]
+        zlist = RK[2][0:RK[-1]]
+        
+    diffVec = np.array([RK[6]-Paris[0],RK[7]-Paris[1],RK[8]-Paris[2]])
+    diffList[i] = lenVec(diffVec,diffVec)
+    
+     
+    print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndifference: ", (RK[6]-Paris[0])/1000,(RK[7]-Paris[1])/1000,(RK[8]-Paris[2])/1000)
+   
+#Kjør denne med dt = 0.01 og et par steps. 
+plt.figure()
+plt.plot(np.rad2deg(np.arctan(gamma)), diffList)
+plt.title("Distance from Paris")
+plt.xlabel(r"Shooting angle $[\degree]$")
+plt.ylabel(r"Distance $[m]$")
+plt.grid()
+plt.show()
 
 
 
@@ -248,19 +248,14 @@ print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndiffer
 #x = R * np.outer(np.cos(u), np.sin(v))
 #y = R * np.outer(np.sin(u), np.sin(v))
 #z = R * np.outer(np.ones(np.size(u)), np.cos(v))
-
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-#ax.plot3D(RK[0]/1000, RK[1]/1000, RK[2]/1000, color = 'red', label='no coreolis')
-#ax.plot3D(RKc[0]/1000, RKc[1]/1000, RKc[2]/1000, color = 'green', label='coreolis')
-
-ax.plot3D(xlist/1000, ylist/1000, zlist/1000, color= 'red', label='no coreolis')
-ax.plot3D(xlistc/1000,ylistc/1000,zlistc/1000, color= 'green', label='coreolis')
-
-#ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='green')
-ax.scatter3D(Crepy[0]/1000,Crepy[1]/1000,Crepy[2]/1000, color = "darkorange", marker = "o")
-ax.scatter3D(Paris[0]/1000,Paris[1]/1000,Paris[2]/1000, color = "blue", marker = "o")
-#ax.scatter3D(RK[6]/1000,RK[7]/1000,R/1000, color = "green", marker = "o")
-#ax.axis((4100,4250,170,175))
-ax.legend()
-plt.show()
+#
+#fig = plt.figure()
+#ax = fig.gca(projection='3d')
+##ax.plot3D(RK[0]/1000, RK[1]/1000, RK[2]/1000, label='path')
+#ax.plot3D(xlist/1000, ylist/1000, zlist/1000, label='path')
+##ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='green')
+#ax.scatter3D(Crepy[0]/1000,Crepy[1]/1000,Crepy[2]/1000, color = "darkorange", marker = "o")
+#ax.scatter3D(Paris[0]/1000,Paris[1]/1000,Paris[2]/1000, color = "red", marker = "o")
+##ax.scatter3D(RK[6]/1000,RK[7]/1000,R/1000, color = "green", marker = "o")
+#ax.legend()
+#plt.show()
