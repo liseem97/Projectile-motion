@@ -90,7 +90,7 @@ def H(X_,Y_,Z_,U_,V_,W_):          #dU/dt
     #print("air density stuff: ", h, L, R)
     central = centralVec(Z_,X_,L)
     G = g*central[0]
-    C = 0 #2*V_*omega
+    C = 2*V_*omega
     return G -B2_m2*U_*V*AD+C
 
 
@@ -103,7 +103,7 @@ def I(X_,Y_,Z_,U_,V_,W_):          #dV/dt
         AD = 0
     central = centralVec(Z_,X_,L)
     G = g*central[1]
-    C= 0 #-2*U_*omega
+    C= -2*U_*omega
     return G -B2_m2*V_*V*AD+C
     
 def J(X_,Y_,Z_,U_,V_,W_):           #dW/dt
