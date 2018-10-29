@@ -58,6 +58,7 @@ print("Paris: ", Paris[0]/1000, Paris[1]/1000, Paris[2]/1000)
 beta = np.arccos(np.dot(Paris,Crepy)/(lenVec(Paris,Paris)*lenVec(Crepy,Crepy)))
 d = beta * R
 print("Distance between places: ", d/1000)
+print(lenVec(Paris-Crepy,Paris-Crepy))
 
 bvec = (Paris - Crepy) / lenVec(Paris-Crepy,Paris-Crepy)
 
@@ -65,7 +66,7 @@ rvec = centralVec(Crepy[2],Crepy[0], lenVec(Crepy,Crepy))
 
 
 t_min = 0
-t_max = 400
+t_max = 200
 dt = 0.1             #time step / tau
 N = int(t_max/dt)
 
@@ -90,7 +91,11 @@ def H(X_,Y_,Z_,U_,V_,W_):          #dU/dt
     #print("air density stuff: ", h, L, R)
     central = centralVec(Z_,X_,L)
     G = g*central[0]
-    C = 2*V_*omega
+    if trigger:
+        C = 2*V_*omega
+    else: 
+        C = 0
+#    C = 0 #2*V_*omega
     return G -B2_m2*U_*V*AD+C
 
 
@@ -103,7 +108,11 @@ def I(X_,Y_,Z_,U_,V_,W_):          #dV/dt
         AD = 0
     central = centralVec(Z_,X_,L)
     G = g*central[1]
-    C= -2*U_*omega
+    if trigger:
+        C = -2*U_*omega
+    else: 
+        C = 0
+    #C= 0 #-2*U_*omega
     return G -B2_m2*V_*V*AD+C
     
 def J(X_,Y_,Z_,U_,V_,W_):           #dW/dt
@@ -125,6 +134,7 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
     y_l=0
     t_l=0
     index=0
+    max_height = 0
     
     X_RK = np.zeros(N_RK)   #Position x
     Y_RK = np.zeros(N_RK)   #Position y
@@ -180,19 +190,25 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
         V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
         W_RK[n+1] = W_RK[n] + k_w1/6 + k_w2/3 + k_w3/3 + k_w4/6
         
+        rho2 = lenCoor(X_RK[n+1],Y_RK[n+1],Z_RK[n+1])
+        rho1 = lenCoor(X_RK[n],Y_RK[n],Z_RK[n])
                     
-        if lenCoor(X_RK[n+1],Y_RK[n+1],Z_RK[n+1]) < R and lenCoor(X_RK[n],Y_RK[n],Z_RK[n]) > R:
-            print("HIT GROUND")
+        if rho2 < R and rho1 > R:
             r = abs(- lenCoor(X_RK[n],Y_RK[n],Z_RK[n]) / lenCoor(X_RK[n+1],Y_RK[n+1],Z_RK[n+1]))
             #print("r ", r)
             x_l = (X_RK[n] + r*X_RK[n+1])/(r + 1)
             y_l = (Y_RK[n] + r*Y_RK[n+1])/(r + 1)
             z_l = (Z_RK[n] + r*Z_RK[n+1])/(r + 1)
             t_l = (t_RK[n] + t_RK[n+1])/2
+            print("HIT GROUND at time ", t_l)
             index = n
+            
+        #calculating maximum height
+        if ((rho1-R)>max_height):
+            max_height = rho1-R
         
     
-    return X_RK, Y_RK, Z_RK, U_RK, V_RK, W_RK, x_l, y_l, z_l, t_RK, t_l, index
+    return X_RK, Y_RK, Z_RK, U_RK, V_RK, W_RK, x_l, y_l, z_l, t_RK, t_l, rho1, index
 
 
 
@@ -200,62 +216,89 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
 
 #gamma = 0.99 # 0.99 er bra
 
-gamma = np.linspace(0.97,1,50)
+gamma = 0.9851
 
-diffList = np.zeros(50)
+    
+direction=(bvec+rvec*gamma)
+shootvec= direction/lenVec(direction,direction)
 
-for i in range(len(gamma)): 
-    print("Gamma: ",gamma[i])
-    direction=(bvec+rvec*gamma[i])
-    shootvec= direction/lenVec(direction,direction)
-    
-    #print("length of shooting vector", lenVec(shootvec,shootvec))
-    
-    V_start = 1640
-    V = V_start*shootvec
-    
-    #print("starting velocity: ", V[0], V[1], V[2], " velocity: ", lenVec(V,V))
-    #print("Starting position: ", lenVec(Crepy,Crepy))
+#print("length of shooting vector", lenVec(shootvec,shootvec))
 
-    RK = RKfunc(Crepy[0], Crepy[1], Crepy[2], V[0], V[1], V[2], t_min, t_max, dt) 
-    
+V_start = 1640
+V = V_start*shootvec
 
-    if RK[-1] != 0:
-        xlist = RK[0][0:RK[-1]]
-        ylist = RK[1][0:RK[-1]]
-        zlist = RK[2][0:RK[-1]]
-        
-    diffVec = np.array([RK[6]-Paris[0],RK[7]-Paris[1],RK[8]-Paris[2]])
-    diffList[i] = lenVec(diffVec,diffVec)
+#print("starting velocity: ", V[0], V[1], V[2], " velocity: ", lenVec(V,V))
+#print("Starting position: ", lenVec(Crepy,Crepy))
+trigger = False
+RK = RKfunc(Crepy[0], Crepy[1], Crepy[2], V[0], V[1], V[2], t_min, t_max, dt) 
+trigger = True
+RKc = RKfunc(Crepy[0], Crepy[1], Crepy[2], V[0], V[1], V[2], t_min, t_max, dt) 
+
+
+if RK[-1] != 0:
+    xlist = RK[0][0:RK[-1]]
+    ylist = RK[1][0:RK[-1]]
+    zlist = RK[2][0:RK[-1]]
     
-     
-    print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndifference: ", (RK[6]-Paris[0])/1000,(RK[7]-Paris[1])/1000,(RK[8]-Paris[2])/1000)
-   
-#Kjør denne med dt = 0.01 og et par steps. 
-plt.figure()
-plt.plot(np.rad2deg(np.arctan(gamma)), diffList)
-plt.title("Distance from Paris")
-plt.xlabel(r"Shooting angle $[\degree]$")
-plt.ylabel(r"Distance $[m]$")
-plt.grid()
+if RKc[-1] != 0:
+    xlistc = RKc[0][0:RKc[-1]]
+    ylistc = RKc[1][0:RKc[-1]]
+    zlistc = RKc[2][0:RKc[-1]]
+ 
+print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\nkm from Paris: ", (RK[6]-Paris[0])/1000,(RK[7]-Paris[1])/1000,(RK[8]-Paris[2])/1000)
+lvec1 = Crepy - (RK[6:9])
+lvec2 = Crepy - (RKc[6:9])
+#print(lvec1, RK[6])
+deltaL=[RK[6]-RKc[6],RK[7]-RKc[7],RK[8]-RKc[8]] #difference in landing point
+b = lenVec(lvec1,lvec1)
+c = lenVec(lvec2,lvec2)
+a = lenVec(deltaL,deltaL)
+#using law of cosines, finding deflection angle
+deflAng = np.arccos((b**2+c**2-a**2)/(2*b*c))
+print("Difference in landing position: ", deltaL,(lenVec(deltaL,deltaL)))
+print("Direction: ", deltaL/(lenVec(deltaL,deltaL)))
+print("Deflection angle: ", deflAng)
+
+print("Maximum heights (km): ", RK[11]/1000,RKc[11]/1000, "Difference: ", (RK[11]-RKc[11])/1000)
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+#ax.plot3D(RK[0]/1000, RK[1]/1000, RK[2]/1000, color = 'red', label='no coreolis')
+#ax.plot3D(RKc[0]/1000, RKc[1]/1000, RKc[2]/1000, color = 'green', label='coreolis')
+
+# Placement 0, 0 would be the bottom left, 1, 1 would be the top right.
+ax.text2D(0.05, 0.95, "Projectile path", transform=ax.transAxes)
+
+
+ax.plot3D(xlist/1000, ylist/1000, zlist/1000, color= 'red', label='No coreolis force')
+ax.plot3D(xlistc/1000,ylistc/1000,zlistc/1000, color= 'green', label='Coreolis force')
+ax.set_xlabel('X axis')
+ax.set_ylabel('Y axis')
+ax.set_zlabel('Z axis')
+
+#ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='green')
+ax.scatter3D(Crepy[0]/1000,Crepy[1]/1000,Crepy[2]/1000, color = "darkorange", marker = "o")
+ax.scatter3D(Paris[0]/1000,Paris[1]/1000,Paris[2]/1000, color = "blue", marker = "o")
+#ax.scatter3D(RK[6]/1000,RK[7]/1000,R/1000, color = "green", marker = "o")
+#ax.axis((4100,4250,170,175))
+ax.legend()
 plt.show()
 
-
-
-
+##example earth
 #u = np.linspace(0, 2 * np.pi, 100)
 #v = np.linspace(0, np.pi, 100)
-#x = R * np.outer(np.cos(u), np.sin(v))
-#y = R * np.outer(np.sin(u), np.sin(v))
-#z = R * np.outer(np.ones(np.size(u)), np.cos(v))
+#x = R * np.outer(np.cos(u), np.sin(v))/R
+#y = R * np.outer(np.sin(u), np.sin(v))/R
+#z = R * np.outer(np.ones(np.size(u)), np.cos(v))/R
 #
 #fig = plt.figure()
 #ax = fig.gca(projection='3d')
-##ax.plot3D(RK[0]/1000, RK[1]/1000, RK[2]/1000, label='path')
-#ax.plot3D(xlist/1000, ylist/1000, zlist/1000, label='path')
-##ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='green')
-#ax.scatter3D(Crepy[0]/1000,Crepy[1]/1000,Crepy[2]/1000, color = "darkorange", marker = "o")
-#ax.scatter3D(Paris[0]/1000,Paris[1]/1000,Paris[2]/1000, color = "red", marker = "o")
-##ax.scatter3D(RK[6]/1000,RK[7]/1000,R/1000, color = "green", marker = "o")
+#ax.text2D(0.05, 0.95, "Earth", transform=ax.transAxes)
+#ax.set_xlabel('X axis')
+#ax.set_ylabel('Y axis')
+#ax.set_zlabel('Z axis')
+#ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='lightblue')
+#ax.axis("equal")
 #ax.legend()
 #plt.show()
+

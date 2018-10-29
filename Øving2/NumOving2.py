@@ -65,7 +65,7 @@ rvec = centralVec(Crepy[2],Crepy[0], lenVec(Crepy,Crepy))
 
 
 t_min = 0
-t_max = 400
+t_max = 200
 dt = 0.1             #time step / tau
 N = int(t_max/dt)
 
@@ -190,13 +190,13 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
         
                     
         if lenCoor(X_RK[n+1],Y_RK[n+1],Z_RK[n+1]) < R and lenCoor(X_RK[n],Y_RK[n],Z_RK[n]) > R:
-            print("HIT GROUND")
             r = abs(- lenCoor(X_RK[n],Y_RK[n],Z_RK[n]) / lenCoor(X_RK[n+1],Y_RK[n+1],Z_RK[n+1]))
             #print("r ", r)
             x_l = (X_RK[n] + r*X_RK[n+1])/(r + 1)
             y_l = (Y_RK[n] + r*Y_RK[n+1])/(r + 1)
             z_l = (Z_RK[n] + r*Z_RK[n+1])/(r + 1)
             t_l = (t_RK[n] + t_RK[n+1])/2
+            print("HIT GROUND at time ", t_l)
             index = n
         
     
@@ -238,7 +238,9 @@ if RKc[-1] != 0:
     zlistc = RKc[2][0:RKc[-1]]
  
 print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndifference: ", (RK[6]-Paris[0])/1000,(RK[7]-Paris[1])/1000,(RK[8]-Paris[2])/1000)
-
+deltaL=[RK[6]-RKc[6],RK[7]-RKc[7],RK[8]-RKc[8]]
+print("Difference in landing position: ", deltaL)
+print("Direction: ", deltaL/(lenVec(deltaL,deltaL)))
 
 
 #u = np.linspace(0, 2 * np.pi, 100)
@@ -254,6 +256,9 @@ ax = fig.gca(projection='3d')
 
 ax.plot3D(xlist/1000, ylist/1000, zlist/1000, color= 'red', label='no coreolis')
 ax.plot3D(xlistc/1000,ylistc/1000,zlistc/1000, color= 'green', label='coreolis')
+ax.set_xlabel('X axis')
+ax.set_ylabel('Y axis')
+ax.set_zlabel('Z axis')
 
 #ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='green')
 ax.scatter3D(Crepy[0]/1000,Crepy[1]/1000,Crepy[2]/1000, color = "darkorange", marker = "o")
