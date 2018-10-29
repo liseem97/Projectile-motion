@@ -241,8 +241,6 @@ print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndiffer
 
 
 
-
-
 #u = np.linspace(0, 2 * np.pi, 100)
 #v = np.linspace(0, np.pi, 100)
 #x = R * np.outer(np.cos(u), np.sin(v))
