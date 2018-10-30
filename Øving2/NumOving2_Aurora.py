@@ -47,7 +47,7 @@ print("Crepy: ", Crepy[0]/1000, Crepy[1]/1000, Crepy[2]/1000)
 
 
 #Paris
-Np = np.deg2rad(48.5667)
+Np = np.deg2rad(48.8667)
 Ep = np.deg2rad(2.35083)
 Paris = np.array([R*np.cos(Np)*np.cos(Ep), R*np.cos(Np)*np.sin(Ep), R*np.sin(Np)])
 
@@ -216,7 +216,7 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
 
 #gamma = 0.99 # 0.99 er bra
 
-gamma = 0.9851
+gamma = 0.706
 
     
 direction=(bvec+rvec*gamma)
@@ -254,7 +254,7 @@ b = lenVec(lvec1,lvec1)
 c = lenVec(lvec2,lvec2)
 a = lenVec(deltaL,deltaL)
 #using law of cosines, finding deflection angle
-deflAng = np.arccos((b**2+c**2-a**2)/(2*b*c))
+deflAng = np.rad2deg(np.arccos((b**2+c**2-a**2)/(2*b*c)))
 print("Difference in landing position: ", deltaL,(lenVec(deltaL,deltaL)))
 print("Direction: ", deltaL/(lenVec(deltaL,deltaL)))
 print("Deflection angle: ", deflAng)
@@ -270,8 +270,8 @@ ax = fig.gca(projection='3d')
 ax.text2D(0.05, 0.95, "Projectile path", transform=ax.transAxes)
 
 
-ax.plot3D(xlist/1000, ylist/1000, zlist/1000, color= 'red', label='No coreolis force')
-ax.plot3D(xlistc/1000,ylistc/1000,zlistc/1000, color= 'green', label='Coreolis force')
+ax.plot3D(xlist/1000, ylist/1000, zlist/1000, color= 'red', label='No coriolis force')
+ax.plot3D(xlistc/1000,ylistc/1000,zlistc/1000, color= 'green', label='Coriolis force')
 ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
 ax.set_zlabel('Z axis')
