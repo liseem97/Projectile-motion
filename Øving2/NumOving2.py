@@ -249,6 +249,8 @@ print("Direction: ", deltaL/(lenVec(deltaL,deltaL)))
 #y = R * np.outer(np.sin(u), np.sin(v))
 #z = R * np.outer(np.ones(np.size(u)), np.cos(v))
 
+
+
 fig = plt.figure()
 ax = fig.gca(projection='3d')
 #ax.plot3D(RK[0]/1000, RK[1]/1000, RK[2]/1000, color = 'red', label='no coreolis')
@@ -263,6 +265,7 @@ ax.set_zlabel('Z axis')
 
 ax.scatter3D(Crepy[0]/1000,Crepy[1]/1000,Crepy[2]/1000, color = "darkorange", marker = "o", label = "Crépy")
 ax.scatter3D(Paris[0]/1000,Paris[1]/1000,Paris[2]/1000, color = "blue", marker = "o", label = "Paris")
+
 
 #ax.plot_surface(x/1000, y/1000, z/1000,  rstride=4, cstride=4, color='green', alpha=0.1)
 #ax.scatter3D(RK[6]/1000,RK[7]/1000,R/1000, color = "green", marker = "o")
