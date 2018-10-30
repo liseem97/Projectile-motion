@@ -254,13 +254,9 @@ ax = fig.gca(projection='3d')
 #ax.plot3D(RK[0]/1000, RK[1]/1000, RK[2]/1000, color = 'red', label='no coreolis')
 #ax.plot3D(RKc[0]/1000, RKc[1]/1000, RKc[2]/1000, color = 'green', label='coreolis')
 
-<<<<<<< HEAD
 ax.plot3D(xlist/1000, ylist/1000, zlist/1000, color= 'red', label='no coriolis')
 ax.plot3D(xlistc/1000,ylistc/1000,zlistc/1000, color= 'green', label='coriolis')
-=======
-ax.plot3D(xlist/1000, ylist/1000, zlist/1000, color= 'red', label='no coreolis')
-ax.plot3D(xlistc/1000,ylistc/1000,zlistc/1000, color= 'green', label='coreolis')
->>>>>>> 55f31fbca26c7f27ded30b718d8f6efe1058870b
+
 ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
 ax.set_zlabel('Z axis')
