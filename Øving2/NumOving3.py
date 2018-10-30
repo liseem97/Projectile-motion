@@ -55,10 +55,12 @@ print("Crepy: ", Crepy[0]/1000, Crepy[1]/1000, Crepy[2]/1000)
 
 #Target
 
-#(48°51ʹ24ʺN 2°21ʹ03E)
+#(48°51ʹ24ʺN 2°21ʹ032''E) PARIS
+#(49°36ʹ18ʺN 3°30ʹ53ʺE) CREPY
 
-N =np.array([48,51,24])
-E = np.array([2,21,3])
+
+N =np.array([49,0,2])
+E = np.array([2,51,6])
 
 Nt = np.deg2rad(N[0] + N[1]/60 + N[2]/3600)
 Et = np.deg2rad(E[0] + E[1]/60 + E[2]/3600)
@@ -229,17 +231,46 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
 
 ###code to run
 
-#gamma = 0.99 # 0.99 er bra
+#gamma = 0.706
+gammaTry = np.linspace(0.1,1,50)
+diffList = np.zeros(len(gammaTry))
+best = 1000000
+gamma = 0
+V_start = 1640
 
-gamma = 0.9851
+for i in range(len(gammaTry)): 
+    print("Gamma: ",gammaTry[i])
+    directionTry=(bvec+rvec*gammaTry[i])
+    shootvecTry= directionTry/lenVec(directionTry,directionTry)
+    
+    #print("length of shooting vector", lenVec(shootvec,shootvec))
+    
+    Vtry = V_start*shootvecTry
+    
+    #print("starting velocity: ", V[0], V[1], V[2], " velocity: ", lenVec(V,V))
+    #print("Starting position: ", lenVec(Crepy,Crepy))
 
+    RKtry = RKfunc(Crepy[0], Crepy[1], Crepy[2], Vtry[0], Vtry[1], Vtry[2], t_min, t_max, dt) 
+    
+
+    if RKtry[-1] != 0:
+        xlist = RKtry[0][0:RKtry[-1]]
+        ylist = RKtry[1][0:RKtry[-1]]
+        zlist = RKtry[2][0:RKtry[-1]]
+        
+    diffVec = np.array([RKtry[6]-Target[0],RKtry[7]-Target[1],RKtry[8]-Target[2]])
+    diffList[i] = lenVec(diffVec,diffVec)
+    
+    if diffList[i]<best: 
+        best = diffList[i]
+        gamma = gammaTry[i]
+    
     
 direction=(bvec+rvec*gamma)
 shootvec= direction/lenVec(direction,direction)
 
 #print("length of shooting vector", lenVec(shootvec,shootvec))
 
-V_start = 1640
 V = V_start*shootvec
 
 #print("starting velocity: ", V[0], V[1], V[2], " velocity: ", lenVec(V,V))
@@ -285,8 +316,8 @@ ax = fig.gca(projection='3d')
 ax.text2D(0.05, 0.95, "Projectile path", transform=ax.transAxes)
 
 
-ax.plot3D(xlist/1000, ylist/1000, zlist/1000, color= 'red', label='No coreolis force')
-ax.plot3D(xlistc/1000,ylistc/1000,zlistc/1000, color= 'green', label='Coreolis force')
+ax.plot3D(xlist/1000, ylist/1000, zlist/1000, color= 'red', label='No coriolis force')
+ax.plot3D(xlistc/1000,ylistc/1000,zlistc/1000, color= 'green', label='Coriolis force')
 ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
 ax.set_zlabel('Z axis')
