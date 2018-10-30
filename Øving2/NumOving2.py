@@ -264,7 +264,7 @@ ax.set_zlabel('Z axis')
 
 
 ax.scatter(Crepy[0]/1000,Crepy[1]/1000,Crepy[2]/1000, color = "darkorange", marker = "o")
-ax.text(Crepy[0]/1000, Crepy[1]/1000, Crepy[2]/1000, "Crepy",size=10, zorder=1, color='k')
+ax.text(Crepy[0]/1000, Crepy[1]/1000, Crepy[2]/1000, "Crépy",size=10, zorder=1, color='k')
 ax.scatter(Paris[0]/1000,Paris[1]/1000,Paris[2]/1000, color = "blue", marker = "o")
 ax.text(Paris[0]/1000, Paris[1]/1000, Paris[2]/1000, "Paris",size=10, zorder=1, color='k')
 
