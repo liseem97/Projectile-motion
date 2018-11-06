@@ -211,8 +211,8 @@ Target = np.zeros([3,3])
 Target[0:] = np.array([R*np.cos(Nt)*np.cos(Et), R*np.cos(Nt)*np.sin(Et), R*np.sin(Nt)])
 Target = np.transpose(Target)
 
-gammaMin=np.array([0.6, 6, 10])
-gammaMax=np.array([0.75, 6.5, 12])
+gammaMin=np.array([0.7, 0.1, 10.5])
+gammaMax=np.array([0.75, 0.3, 11])
 
 gamma = np.zeros(3)
 
@@ -355,23 +355,25 @@ ax = fig.gca(projection='3d')
 ## Placement 0, 0 would be the bottom left, 1, 1 would be the top right.
 #ax.text2D(0.05, 0.95, "Projectile path", transform=ax.transAxes)
 #
-ax.plot3D(xlist0/1000, ylist0/1000, zlist0/1000, color= 'red', label='No coriolis force')
-ax.plot3D(xlistc0/1000,ylistc0/1000,zlistc0/1000, color= 'green', label='Coriolis force')
-ax.plot3D(xlist1/1000, ylist1/1000, zlist1/1000, color= 'red', label='No coriolis force')
-ax.plot3D(xlistc1/1000,ylistc1/1000,zlistc1/1000, color= 'green', label='Coriolis force')
-ax.plot3D(xlist2/1000, ylist2/1000, zlist2/1000, color= 'red', label='No coriolis force')
-ax.plot3D(xlistc2/1000,ylistc2/1000,zlistc2/1000, color= 'green', label='Coriolis force')
+ax.plot3D(xlist0/1000, ylist0/1000, zlist0/1000, color= 'green', label='No coriolis force')
+ax.plot3D(xlistc0/1000,ylistc0/1000,zlistc0/1000, color= 'red', label='Coriolis force')
+ax.plot3D(xlist1/1000, ylist1/1000, zlist1/1000, color= 'green')
+ax.plot3D(xlistc1/1000,ylistc1/1000,zlistc1/1000, color= 'red')
+ax.plot3D(xlist2/1000, ylist2/1000, zlist2/1000, color= 'green')
+ax.plot3D(xlistc2/1000,ylistc2/1000,zlistc2/1000, color= 'red')
 
 ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
 ax.set_zlabel('Z axis')
 #
 ##ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='green')
-#ax.scatter3D(Crepy[0]/1000,Crepy[1]/1000,Crepy[2]/1000, color = "darkorange", marker = "o")
-#ax.scatter3D(Target[0]/1000,Target[1]/1000,Target[2]/1000, color = "blue", marker = "o")
+ax.scatter3D(Crepy[0]/1000,Crepy[1]/1000,Crepy[2]/1000, color = "darkorange", marker = "o", label ="Crepy")
+ax.scatter3D(Target[0][0]/1000,Target[0][1]/1000,Target[0][2]/1000, color = "blue", marker = "o", label ="Paris")
+ax.scatter3D(Target[1][0]/1000,Target[1][1]/1000,Target[1][2]/1000, color = "fuchsia", marker = "o", label="Reims")
+ax.scatter3D(Target[2][0]/1000,Target[2][1]/1000,Target[2][2]/1000, color = "teal", marker = "o", label="St-Quentin")
 ##ax.scatter3D(RK[6]/1000,RK[7]/1000,R/1000, color = "green", marker = "o")
 ##ax.axis((4100,4250,170,175))
-ax.legend()
+ax.legend(numpoints=1)
 plt.show()
 #
 ###example earth

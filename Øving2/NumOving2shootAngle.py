@@ -221,12 +221,12 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
 ###code to run
 
 #gamma = 0.99 # 0.99 er bra
-target = Paris
+target = StQt
 
 bvec = (target - Crepy) / lenVec(target-Crepy,target-Crepy)
 rvec = centralVec(Crepy[2],Crepy[0], lenVec(Crepy,Crepy))
 Ng = 10
-gamma = np.linspace(0.71,0.72,Ng)
+gamma = np.linspace(0.01,0.1,Ng)
 diffList = np.zeros(Ng)
 trigger=False
 
