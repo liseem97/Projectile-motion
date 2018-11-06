@@ -19,6 +19,8 @@ a = 6.5 * 10**(-3) #K/m
 alpha = 2.5 #air 
 T_0 = 288.15 #K (tilsvarer 15 grader celcius)
 
+trigger = False
+
 
 #Initial conditions
 #Earth
@@ -59,11 +61,11 @@ print("Crepy: ", Crepy[0]/1000, Crepy[1]/1000, Crepy[2]/1000)
 #(49°36ʹ18ʺN 3°30ʹ53ʺE) CREPY
 
 
-N =np.array([49,0,2])
-E = np.array([2,51,6])
+#N =np.array([48,51,24])
+#E = np.array([2,21,32])
 
-Nt = np.deg2rad(N[0] + N[1]/60 + N[2]/3600)
-Et = np.deg2rad(E[0] + E[1]/60 + E[2]/3600)
+Nt = np.deg2rad(48.8667)#N[0] + N[1]/60 + N[2]/3600)
+Et = np.deg2rad(2.35083)#E[0] + E[1]/60 + E[2]/3600)
 
 Target = np.array([R*np.cos(Nt)*np.cos(Et), R*np.cos(Nt)*np.sin(Et), R*np.sin(Nt)])
 
