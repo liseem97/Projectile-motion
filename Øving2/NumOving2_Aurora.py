@@ -66,9 +66,10 @@ rvec = centralVec(Crepy[2],Crepy[0], lenVec(Crepy,Crepy))
 
 
 t_min = 0
-t_max = 200
+t_max = 400
 dt = 0.1             #time step / tau
 N = int(t_max/dt)
+
 
 
 #RUNGE-KUTTA (4th order)
@@ -86,9 +87,11 @@ def H(X_,Y_,Z_,U_,V_,W_):          #dU/dt
     V = lenCoor(U_,V_,W_)
     h = L-R
     AD = (1 -((a*h)/T_0))**alpha #airdensity adiabatic
-    if h < 0 or AD < 0: 
+    if np.isnan(AD) or h<0: 
         AD = 0
     #print("air density stuff: ", h, L, R)
+#    if(AD!=0):
+#        print("AD and height", AD, h, gammaTry[i])
     central = centralVec(Z_,X_,L)
     G = g*central[0]
     if trigger:
@@ -98,13 +101,12 @@ def H(X_,Y_,Z_,U_,V_,W_):          #dU/dt
 #    C = 0 #2*V_*omega
     return G -B2_m2*U_*V*AD+C
 
-
 def I(X_,Y_,Z_,U_,V_,W_):          #dV/dt
     L = lenCoor(X_,Y_,Z_)
     V = lenCoor(U_,V_,W_)
     h = L-R
     AD = (1 - ((a*h)/T_0))**alpha #airdensity adiabatic
-    if h < 0 or AD < 0: 
+    if np.isnan(AD): 
         AD = 0
     central = centralVec(Z_,X_,L)
     G = g*central[1]
@@ -120,18 +122,20 @@ def J(X_,Y_,Z_,U_,V_,W_):           #dW/dt
     V = lenCoor(U_,V_,W_)
     h = L-R
     AD = (1 - ((a*h)/T_0))**alpha
-    if h < 0 or AD < 0: 
+    if np.isnan(AD): 
         AD = 0
     central = centralVec(Z_,X_,L)
     G = g*central[2]
     return G-B2_m2*W_*V*AD
 
 def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):  
+
     dt_RK = tau
     N_RK = int(t_max/dt_RK)
     t_RK = np.linspace(t_min, t_max, N_RK)
     x_l=0
     y_l=0
+    z_l=0
     t_l=0
     index=0
     max_height = 0
@@ -149,6 +153,7 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
     U_RK[0] = U0
     V_RK[0] = V0
     W_RK[0] = W0
+    
 
     
     for n in range(N_RK-1):
@@ -216,7 +221,7 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
 
 #gamma = 0.99 # 0.99 er bra
 
-gamma = 0.706
+gamma = 2.41#0.706
 
     
 direction=(bvec+rvec*gamma)
@@ -236,16 +241,16 @@ RKc = RKfunc(Crepy[0], Crepy[1], Crepy[2], V[0], V[1], V[2], t_min, t_max, dt)
 
 
 if RK[-1] != 0:
-    xlist = RK[0][0:RK[-1]]
-    ylist = RK[1][0:RK[-1]]
-    zlist = RK[2][0:RK[-1]]
+    xlist1 = RK[0][0:RK[-1]]
+    ylist1 = RK[1][0:RK[-1]]
+    zlist1 = RK[2][0:RK[-1]]
     
 if RKc[-1] != 0:
-    xlistc = RKc[0][0:RKc[-1]]
-    ylistc = RKc[1][0:RKc[-1]]
-    zlistc = RKc[2][0:RKc[-1]]
+    xlistc1 = RKc[0][0:RKc[-1]]
+    ylistc1 = RKc[1][0:RKc[-1]]
+    zlistc1 = RKc[2][0:RKc[-1]]
  
-print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\nkm from Paris: ", (RK[6]-Paris[0])/1000,(RK[7]-Paris[1])/1000,(RK[8]-Paris[2])/1000)
+print("landing position",xlist1[-1]/1000,ylist1[-1]/1000,zlist1[-1]/1000, "\nkm from Paris: ", (RK[6]-Paris[0])/1000,(RK[7]-Paris[1])/1000,(RK[8]-Paris[2])/1000)
 lvec1 = Crepy - (RK[6:9])
 lvec2 = Crepy - (RKc[6:9])
 #print(lvec1, RK[6])
@@ -270,8 +275,10 @@ ax = fig.gca(projection='3d')
 ax.text2D(0.05, 0.95, "Projectile path", transform=ax.transAxes)
 
 
-ax.plot3D(xlist/1000, ylist/1000, zlist/1000, color= 'red', label='No coriolis force')
-ax.plot3D(xlistc/1000,ylistc/1000,zlistc/1000, color= 'green', label='Coriolis force')
+ax.plot3D(xlist1/1000, ylist1/1000, zlist1/1000, color= 'red', label='No coriolis force')
+ax.plot3D(xlistc1/1000,ylistc1/1000,zlistc1/1000, color= 'green', label='Coriolis force')
+#ax.plot3D(xlist2/1000, ylist2/1000, zlist2/1000, color= 'blue', label='No coriolis force')
+#ax.plot3D(xlistc2/1000,ylistc2/1000,zlistc2/1000, color= 'yellow', label='Coriolis force')
 ax.set_xlabel('X axis')
 ax.set_ylabel('Y axis')
 ax.set_zlabel('Z axis')

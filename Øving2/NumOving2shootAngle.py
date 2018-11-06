@@ -53,16 +53,20 @@ Paris = np.array([R*np.cos(Np)*np.cos(Ep), R*np.cos(Np)*np.sin(Ep), R*np.sin(Np)
 
 print("Paris: ", Paris[0]/1000, Paris[1]/1000, Paris[2]/1000)
 
+#Reims
+Nr = np.deg2rad(49.2583)
+Er = np.deg2rad(4.0317)
+Reims = np.array([R*np.cos(Nr)*np.cos(Er), R*np.cos(Nr)*np.sin(Er), R*np.sin(Nr)])
+
+#StQt
+Ns = np.deg2rad(49.8471)
+Es = np.deg2rad(3.2874)
+StQt = np.array([R*np.cos(Ns)*np.cos(Es), R*np.cos(Ns)*np.sin(Es), R*np.sin(Ns)])
 
 #Distance between Crepy and Paris 
 beta = np.arccos(np.dot(Paris,Crepy)/(lenVec(Paris,Paris)*lenVec(Crepy,Crepy)))
 d = beta * R
 print("Distance between places: ", d/1000)
-
-bvec = (Paris - Crepy) / lenVec(Paris-Crepy,Paris-Crepy)
-
-rvec = centralVec(Crepy[2],Crepy[0], lenVec(Crepy,Crepy))
-
 
 t_min = 0
 t_max = 400
@@ -85,25 +89,34 @@ def H(X_,Y_,Z_,U_,V_,W_):          #dU/dt
     V = lenCoor(U_,V_,W_)
     h = L-R
     AD = (1 -((a*h)/T_0))**alpha #airdensity adiabatic
-    if h < 0 or AD < 0: 
+    if np.isnan(AD) or h<0: 
         AD = 0
     #print("air density stuff: ", h, L, R)
+#    if(AD!=0):
+#        print("AD and height", AD, h, gammaTry[i])
     central = centralVec(Z_,X_,L)
     G = g*central[0]
-    C = 0#2*V_*omega
+    if trigger:
+        C = 2*V_*omega
+    else: 
+        C = 0
+#    C = 0 #2*V_*omega
     return G -B2_m2*U_*V*AD+C
-
 
 def I(X_,Y_,Z_,U_,V_,W_):          #dV/dt
     L = lenCoor(X_,Y_,Z_)
     V = lenCoor(U_,V_,W_)
     h = L-R
     AD = (1 - ((a*h)/T_0))**alpha #airdensity adiabatic
-    if h < 0 or AD < 0: 
+    if np.isnan(AD): 
         AD = 0
     central = centralVec(Z_,X_,L)
     G = g*central[1]
-    C= 0#-2*U_*omega
+    if trigger:
+        C = -2*U_*omega
+    else: 
+        C = 0
+    #C= 0 #-2*U_*omega
     return G -B2_m2*V_*V*AD+C
     
 def J(X_,Y_,Z_,U_,V_,W_):           #dW/dt
@@ -111,20 +124,23 @@ def J(X_,Y_,Z_,U_,V_,W_):           #dW/dt
     V = lenCoor(U_,V_,W_)
     h = L-R
     AD = (1 - ((a*h)/T_0))**alpha
-    if h < 0 or AD < 0: 
+    if np.isnan(AD): 
         AD = 0
     central = centralVec(Z_,X_,L)
     G = g*central[2]
     return G-B2_m2*W_*V*AD
 
 def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):  
+
     dt_RK = tau
     N_RK = int(t_max/dt_RK)
     t_RK = np.linspace(t_min, t_max, N_RK)
     x_l=0
     y_l=0
+    z_l=0
     t_l=0
     index=0
+    max_height = 0
     
     X_RK = np.zeros(N_RK)   #Position x
     Y_RK = np.zeros(N_RK)   #Position y
@@ -139,6 +155,7 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
     U_RK[0] = U0
     V_RK[0] = V0
     W_RK[0] = W0
+    
 
     
     for n in range(N_RK-1):
@@ -180,29 +197,38 @@ def RKfunc(X0, Y0, Z0, U0, V0, W0, t_min, t_max, tau):
         V_RK[n+1] = V_RK[n] + k_v1/6 + k_v2/3 + k_v3/3 + k_v4/6
         W_RK[n+1] = W_RK[n] + k_w1/6 + k_w2/3 + k_w3/3 + k_w4/6
         
+        rho2 = lenCoor(X_RK[n+1],Y_RK[n+1],Z_RK[n+1])
+        rho1 = lenCoor(X_RK[n],Y_RK[n],Z_RK[n])
                     
-        if lenCoor(X_RK[n+1],Y_RK[n+1],Z_RK[n+1]) < R and lenCoor(X_RK[n],Y_RK[n],Z_RK[n]) > R:
-            print("HIT GROUND")
+        if rho2 < R and rho1 > R:
             r = abs(- lenCoor(X_RK[n],Y_RK[n],Z_RK[n]) / lenCoor(X_RK[n+1],Y_RK[n+1],Z_RK[n+1]))
             #print("r ", r)
             x_l = (X_RK[n] + r*X_RK[n+1])/(r + 1)
             y_l = (Y_RK[n] + r*Y_RK[n+1])/(r + 1)
             z_l = (Z_RK[n] + r*Z_RK[n+1])/(r + 1)
             t_l = (t_RK[n] + t_RK[n+1])/2
+            print("HIT GROUND at time ", t_l)
             index = n
+            
+        #calculating maximum height
+        if ((rho1-R)>max_height):
+            max_height = rho1-R
         
     
-    return X_RK, Y_RK, Z_RK, U_RK, V_RK, W_RK, x_l, y_l, z_l, t_RK, t_l, index
-
+    return X_RK, Y_RK, Z_RK, U_RK, V_RK, W_RK, x_l, y_l, z_l, t_RK, t_l, rho1, index
 
 
 ###code to run
 
 #gamma = 0.99 # 0.99 er bra
+target = Paris
 
-gamma = np.linspace(0.7,0.72,50)
-
-diffList = np.zeros(50)
+bvec = (target - Crepy) / lenVec(target-Crepy,target-Crepy)
+rvec = centralVec(Crepy[2],Crepy[0], lenVec(Crepy,Crepy))
+Ng = 10
+gamma = np.linspace(0.71,0.72,Ng)
+diffList = np.zeros(Ng)
+trigger=False
 
 for i in range(len(gamma)): 
     print("Gamma: ",gamma[i])
@@ -225,11 +251,10 @@ for i in range(len(gamma)):
         ylist = RK[1][0:RK[-1]]
         zlist = RK[2][0:RK[-1]]
         
-    diffVec = np.array([RK[6]-Paris[0],RK[7]-Paris[1],RK[8]-Paris[2]])
+    diffVec = np.array([RK[6]-target[0],RK[7]-target[1],RK[8]-target[2]])
     diffList[i] = lenVec(diffVec,diffVec)
     
-     
-    print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndifference: ", (RK[6]-Paris[0])/1000,(RK[7]-Paris[1])/1000,(RK[8]-Paris[2])/1000)
+    print("landing position",xlist[-1]/1000,ylist[-1]/1000,zlist[-1]/1000, "\ndifference: ", (RK[6]-target[0])/1000,(RK[7]-target[1])/1000,(RK[8]-target[2])/1000)
    
 #Kjør denne med dt = 0.01 og et par steps. 
 plt.figure()
